@@ -1,0 +1,15 @@
+
+So when we register an event - we give it a controller.event handler.
+
+This event handler will look up the registered action type for the given event.
+If the action type is not yet registered, it will simply place the event into a
+queue (array of "events", storing the event object and event type) and when an
+event is registered it will then dispatch one instance of the event for every
+event in the queue.  This allows events to happen and then asynchronously get
+removed.
+
+We have to store the node context
+
+
+Events in this framework need qualifiers.  We rely on id's and classes for
+this.

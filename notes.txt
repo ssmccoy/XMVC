@@ -1,0 +1,55 @@
+
+How document scope works..
+
+While iterating over the document to populate event handlers, each level of the
+document will create a new "scope".  The scope effectively mirrors the
+document, and each level of "scope" is removed after parsing that section of
+the document is complete.  The scope objects represent a hierarchy mirroring
+the document structure.  Any level of scope can inherit keys from any of its
+parent scopes.  Scopes are effectively singly linked, they know nothing of
+their children, only of their parents.
+
+Application of document scope..
+
+The "new" action method is fairly special.  If an item is said to have a method
+called "new" the actual method will never be invoked.  Instead, this is
+indicative that the "new" keyword should instead be used to allocate a new
+object of this name given the mapping from token name to constructor function.
+This means that when an action which is "new"....
+
+
+..THIS IS FUCKING COMPLICATED...
+
+Population life cycle:
+
+  populate() can be called before the configuration is available, but it will
+  not do anything other than enqueue a population cycle.
+
+  The populate() queue is emptied (by executing all pending population cycles)
+  when the configuration file has been fetched.
+
+  populate() will only populate the actual events for nodes who have actions
+  that are already registered.  All actions that are not registered simply
+  store nodes and a series of instructions for the given action.  At this
+  point, registering an action will cause the node population to take place.
+
+  registry-queue...
+  action.name: [
+    {
+        scope: scope,
+        type: action.type,
+        node: node that matched,
+        method: action,
+    }
+  ]
+
+  while action.name is registered
+    for each population in action.name:
+        node.addEventListener(type, stub(scope.get(action.name), method))
+        if (type == "load") /* Special case ? */
+
+
+  events that have yet to be registered may want to enqueue items.  This might
+  be overrated.
+
+Overly Complicated....
