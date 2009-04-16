@@ -1,5 +1,3 @@
-
-
 /**
  * An observer for asynchronous updates.
  * @constructor
@@ -30,93 +28,6 @@ xmvc.Observer = function (action, errorlistener) {
         }
     }
 
-    this.onerror  = function (message) {
-        if (errorlistener) errorlistener(message)
-    }
-
-    /* XXX None of the following does anything currently, it's just to remind
-     * me of how things were being done before. */
-    function () {
-
-        for (var i = 0; i < this.processors.length; i++) {
-            var processor = this.processors[i]
-
-            if (processor.target) {
-                context = document.getElementById(processor.target)
-                if (! context) {
-                    throw new Error("Unable to locate target: \f"
-                                .format(processor.target))
-                }
-            }
-            else if (processor.context) {
-                var xpathres = document.evaluate( processor.context,
-                        context, NSResolver,
-                        XPathResult.FIRST_ORDERED_NODE_TYPE, null )
-    
-                    // If there is more than one result, behavior is undefined.
-                context = xpathres.singleNodeValue
-    
-                if (context == null) {
-                   throw new Error(
-                           "context expression returned no results")
-                }
-            }
-    
-            var time = new Date()
-            var update = processor.xsl.transformToFragment(
-                    fragment, document)
-    
-            window.debug("Transformation took \fms".format(new Date() - time))
-    
-            /* We cannot add the events immediately or they simply will
-             * fail to work.  Event's on un-rendered nodes are
-             * optimized away.  But these nodes will be rendered when
-             * this is finished, so a microscopic delay will make sure
-             * we let this thing render first.
-    
-             * The document fragment disappears after the
-             * update/rendering.  So we cannot operate on that
-             * directly.
-    
-             * The way this works is real obnoxious.  But it gets the
-             * job done.
-             */
-    
-            if (processor.populate) {
-                for (var x = 0; x < update.childNodes.length; x++) {
-                    ; (function () {
-                        var child = update.childNodes[x]
-                        window.debug("delaying population of \f".format(child))
-                        window.setTimeout( function () {
-                            var time = new Date()
-
-                            /* NOTE: This was available from the constructor */
-                            controller.populate(child)
-                            window.debug("Population took \fms".format( 
-                                new Date() - time))
-                        }, 0 )
-                    })()
-                }
-            }
-
-            /* Dispatch from prototype */
-            this[processor.style](context, update)
-    
-    /* This is how it used to work, go ahead and remove it once thie update is
-     * complete.
-            switch (processor.style) {
-                case "replace":
-                    context.parentNode.replaceChild(
-                            update, context)
-                    break;
-                case "append":
-                    context.appendChild(update)
-                    break;
-            }
-    */
-        }
-    }
-
     /**
      * Observe an error.
      *
@@ -124,19 +35,7 @@ xmvc.Observer = function (action, errorlistener) {
      * an error.  Currently, the default implementation of this only alerts the
      * user.</p>
      */
-    this.onerror  = function (error) {
-        /* TODO Make this more flexible than just alerting. */
-        window.alert(error)
+    this.onerror  = function (message) {
+        if (errorlistener) errorlistener(message)
     }
 }
-
-xmvc.Observer.prototype = {
-    replace: function (context, update) {
-        context.parentNode.replaceChild(update, context)
-    },
-
-    append: function (context, update) {
-        context.appendChild(update)
-    }
-}
-

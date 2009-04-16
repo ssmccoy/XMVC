@@ -1,10 +1,12 @@
 /**
  * @constructor
- * @class
+ * @class An object representing a transform action.
+ *
+ * <p>Not to be confused with Transformer.</p>
  *
  * @author <a href="tag@cpan.org">Scott S. McCoy</a>
  */
-xmvc.Transform = function (locator, style, transformer) {
+xmvc.Transform = function (controller, locator, style, transformer) {
 
     /**
      * Apply transformation to the given context.
@@ -27,6 +29,6 @@ xmvc.Transform = function (locator, style, transformer) {
 }
 
 /* Simple enumeration */
-xmvc.Transform.Style = {}
+xmvc.Transform.Style = []
 xmvc.Transform.Style.append  = {}
 xmvc.Transform.Style.replace = {}

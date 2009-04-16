@@ -13,6 +13,8 @@
  * @author <a href="tag@cpan.org">Scott S. McCoy</a>
  */
 xmvc.ConfigurationParser = function (controller, sourceFetcherFactory, uri) {
+    var updates  = []
+    this.updates = function () { return updates }
     /**
      * XML Namespace Resolver for use with XPath API
      *
@@ -55,15 +57,6 @@ xmvc.ConfigurationParser = function (controller, sourceFetcherFactory, uri) {
         }
 
         return result
-    }
-
-    /* Add an XSLT Processor */
-    function addProcessor (style, populate, result, params, target, context) {
-        return function (stylesheet) {
-
-
-            var transform = xmvc.
-        }
     }
 
     function extractTransforms (element) {
@@ -126,7 +119,7 @@ xmvc.ConfigurationParser = function (controller, sourceFetcherFactory, uri) {
             }
 
             if (style in xmvc.Transform.Style) {
-                var transform = new xmvc.Transform(locator,
+                var transform = new xmvc.Transform(controller, locator,
                         xmvc.Transform.Style[style], transformer)
 
                 result.push(transform)
@@ -142,31 +135,8 @@ xmvc.ConfigurationParser = function (controller, sourceFetcherFactory, uri) {
         return result
     }
 
-    /* XXX This probably belongs in a different object */
-    var registerHandler = {
-        /* Method is unused here */
-        "constructor": function (handler) {
-            /* The passed in action is the object registered to handler, it
-             * should be a function. */
-            return function (scope, action) {
-                var handler = scope.set(handler, new action())
-            }
-        },
-        "method": function (handler, method) {
-            return function (scope, action) {
-                
-            }
-        },
-        /* Method is unused here */
-        "function": function (handler) {
-        },
-        /* Method is unused here */
-        "object": function () {
-        }
-    }
-
     function parseEventsTransforms (map, id, actions) {
-        if (typeof map[id] == "undefined") map[id] = []
+        var result = []
 
         for (var i = 0; i < actions.length; i++) {
             if (actions[i].localName == "action") {
@@ -180,8 +150,6 @@ xmvc.ConfigurationParser = function (controller, sourceFetcherFactory, uri) {
                 if (!(register in registerHandler)) {
                     /* XXX ERROR */
                 }
-
-                var handler  = registerHandler[register](handler)
 
                 var action   = new xmvc.Action(handler, method, register, type,
                         extractTransforms(actions[i]))
@@ -197,29 +165,19 @@ xmvc.ConfigurationParser = function (controller, sourceFetcherFactory, uri) {
                  * enqueued until action handlers are actually loaded and
                  * registered.
                  */
-                map[id][type] = map[id][type] || []
 
-                map[id][type].push({
-                    handler: handler,
-                    transforms: extractTransforms(actions[i])
-                })
+                result.push(action)
             }
         }
-    }
-
-    function parseView (entity) {
-        var id = entity.getAttribute("id")
-
-        var actions = entity.childNodes
-
-        parseEventsTransforms(controller.handlerMap, id, actions)
+        
+        return result
     }
 
     function parseUpdate (entity) {
-        var cls = entity.getAttribute("class")
-        var actions = entity.childNodes
+        return new xmvc.Update(entity.getAttribute("id"),
+                               entity.getAttribute("class"),
+                               extractTransforms(entity.childNodes))
 
-        parseEventsTransforms(controller.updateMap, cls, actions)
     }
 
     function parseConfig (response) {
@@ -239,10 +197,10 @@ xmvc.ConfigurationParser = function (controller, sourceFetcherFactory, uri) {
         for (var i = 0; i < entities.length; i++) {
             switch (entities[i].localName) {
                 case "view":
-                    parseView(entities[i])
+                    updates.push(parseUpdate(entities[i]))
                     break;
                 case "update":
-                    parseUpdate(entities[i])
+                    updates.push(parseUpdate(entities[i]))
                     break;
                 case "handlers":
                     loadHandlers(entities[i])

@@ -6,6 +6,7 @@
 xmvc.Action = function (handler, method, register, type, transforms) {
     var action      = this
     this.transforms = function () { return transforms }
+    this.method     = function () { return method     }
     this.type       = function () { return type       }
 
     this.onaction = function (event, observer) {
@@ -33,7 +34,7 @@ xmvc.Action = function (handler, method, register, type, transforms) {
 
             case "constructor": return function (event) {
                 var observer = new xmvc.Observer(action)
-                scope.set(handler, registry.lookup(handler)(event, observer)
+                scope.set(handler, registry.lookup(handler)(event, observer))
             }
         }
     }

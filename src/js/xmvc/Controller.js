@@ -140,6 +140,8 @@ xmvc.Controller = function (document, xpathFactory, xsltFactory) {
                     "Action \f on \f has no method but is not a function")
             }
             else {
+                /* Dispatch to the method on the provided object */
+                context[method](this, event, observer)
             }
 
             if (context == undefined) {
@@ -226,6 +228,14 @@ xmvc.Controller = function (document, xpathFactory, xsltFactory) {
      *
      * @param {Element} element the element to begin from.
      */
+
+    this.process  = function (node) {
+        /* Let the browser do a cycle, since most browsers need to at this
+         * point (mozilla included).  Following that cycle, start the recursive
+         * population... */
+        setTimeout(function () { controller.populate(node, node.scope) }, 0)
+    }
+
      /* TODO Figure out if there is some tricky way where we can actually
       * iterate over document.all if we're given a root level element of a
       * document and document.all exists.  This of course gets even more tricky
@@ -233,18 +243,15 @@ xmvc.Controller = function (document, xpathFactory, xsltFactory) {
       * recursive descent. */
     this.populate = function (element, scope) {
         var currentScope = new xmvc.ControllerScope(scope)
+        element.scope = currentScope
 
         if (element.nodeType == Node.ELEMENT_NODE) {
             /* XXX IEtoW3C */
             if (!element.addEventListener) hookupDOMEventsOn(node)
 
-            var id = element.getAttribute("id")
-            stubEventsFor(element, scope, registry.eventsForId(id))
-//          stubEventsFor(element, handlerMap, id)
-
-            var cls = element.getAttribute("class")
- //         stubEventsFor(element, updateMap, cls)
-            stubEventsFor(element, scope, registry.eventsForClass(cls))
+            for (update in updates) {
+                update.applyEvents(element, scope)
+            }
         }
 
         for (var i = 0; i < element.childNodes.length; i++) {
@@ -292,7 +299,7 @@ xmvc.Controller = function (document, xpathFactory, xsltFactory) {
      * @param {Array} methods The list of available method names.
      */
     this.register = function (name, handler, methods) {
-        var isPublish  = typeof methods != "undefined" || methods != null
+        var isPublish  = typeof methods != "undefined" && methods != null
         var isFunction = typeof handler == "function"
 
         if (isPublish) {

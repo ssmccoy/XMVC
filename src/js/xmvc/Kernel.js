@@ -16,9 +16,15 @@ xmvc.Kernel = function () {
         running = true
 
         this.doOneEvent()
-        /* I can only do this without wrapping because this is all private data
-         */
-        setTimeout(function () { kernel.run }, 0)
-        if (queue.length == 0) running = false
+
+        if (queue.length == 0) {
+            running = false
+        }
+        else {
+            /* Let the browser do a cycle as well.  This slows down our event
+             * loop considerably, but stops the browser from freezing up while
+             * long running processes are under way */
+            setTimeout(function () { kernel.run() }, 1)
+        }
     }
 }

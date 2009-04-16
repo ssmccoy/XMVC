@@ -18,5 +18,6 @@ xmvc.TransformLoadingObserver = function (transformer) {
 
     this.onerror  = function (error) {
         /* TODO Notify of error */
+        window.alert("There was an unexpected error: " + error)
     }
 }
