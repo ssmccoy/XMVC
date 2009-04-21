@@ -8,6 +8,8 @@
  * @author <a href="tag@cpan.org">Scott S. McCoy</a>
  */
 xmvc.Controller = function (document, xpathFactory, xsltFactory) {
+    var log = LoggerFactory.getLogger("xmvc.Controller")
+
     if (xpathFactory == undefined) 
         xpathFactory = new xmvc.ContextLocatorFactory()
     if (xsltFactory == undefined)
@@ -135,9 +137,10 @@ xmvc.Controller = function (document, xpathFactory, xsltFactory) {
                 if (typeof context == "function") {
                     context.call(this, event, observer)
                 }
-                else
+                else {
                     throw new xmvc.ControllerError(
                     "Action \f on \f has no method but is not a function")
+                }
             }
             else {
                 /* Dispatch to the method on the provided object */

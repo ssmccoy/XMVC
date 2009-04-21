@@ -1,4 +1,91 @@
 
+function DocumentScope (document) {
+    this.root = new xmvc.ControllerScope()
+
+    document.documentElement.scope = this.root
+
+    /**
+     * Vivify scope for a given element of a document.
+     *
+     * <p>This method ascends the document from the supplied element until a
+     * node with scope associated with it is found.  It then attaches scope to
+     * all elements in the ascent of the tree.  If the given element has scope
+     * already, no new scopes are created.</p>
+     *
+     * @return The scope for the supplied element.
+     * @throws DocumentScopeException If the supplied element does not belong
+     * to the document this document scope is attached to.
+     * @throws DocumentScopeException If the supplied element is not actually
+     * <b>attached</b> to the document.
+     */
+    this.vivify = function DocumentScope_vivify (element) {
+        if (element.ownerDocument != document) {
+            throw new DocumentScopeException(
+                "Attempt to vifify scope for element {" + 
+                element.namespaceURI + "}#" + element.localName + 
+                " failed!  Element is not a part of this scope's document"
+                )
+        }
+
+        var lastNode  = null
+        var nodeStack = []
+
+        /* Wheel backward up the document until we find a node that has
+         * scope... */
+        for (var cursor = element; cursor != null; cursor = cursor.parentNode)
+        {
+            if (typeof cursor.scope != "undefined") {
+                var lastNode = cursor
+
+                break
+            }
+
+            nodeStack.unshift(cursor)
+        }
+
+        if (lastNode == null) {
+            throw new DocumentScopeException(
+                "Unable to find a node in the parent tree which has scope " +
+                "attached.  Has this element been added to the document?"
+                )
+        }
+        
+        var scope = lastNode.scope
+
+        for (var i = 0; i < nodeStack.length; i++) {
+            var cursor = nodeStack[i]
+
+            /* I *really* do mean this */
+            cursor.scope = scope = new xmvc.ControllerScope(scope)
+        }
+
+        return scope
+    }
+
+    /**
+     * Return the scope for the given node.
+     *
+     * <p>Given a node which belongs to the document this scope is attached to,
+     * returns the scope associated with that node, if any.</p>
+     *
+     * @return {xmvc.ControllerScope} The scope associated with this node, may
+     * be null.
+     * @throws DocumentScopeException If the supplied object is not a node of
+     * this document.
+     */
+    this.forNode = function DocumentScope_forNode (node) {
+        if (element.ownerDocument != document) {
+            throw new DocumentScopeException(
+                "Attempt to vifify scope for element {" + 
+                element.namespaceURI + "}#" + element.localName + 
+                " failed!  Element is not a part of this scope's document"
+                )
+        }
+
+        return node.scope || null
+    }
+}
+
 /**
  * @constructor.
  * @class An object to represent a level of scope.
@@ -23,7 +110,7 @@
  *
  * @author <a href="tag@cpan.org">Scott S. McCoy</a>
  */
-xmvc.ControllerScope = function (parent) {
+xmvc.ControllerScope = function xmvc_ControllerScope (parent) {
     var table = {}
 
     /**
@@ -55,7 +142,7 @@ xmvc.ControllerScope = function (parent) {
             return table[key]
         }
         
-        return parent != undefined ? parent.valueOf(key) : undefined
+        return typeof parent != "undefined" ? parent.valueOf(key) : undefined
     }
 
     /**
