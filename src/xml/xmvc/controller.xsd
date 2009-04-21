@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+      targetNamespace="http://www.blisted.org/ns/xmvc/"
+      xmlns="http://www.blisted.org/ns/xmvc/">
+
+  <xsd:element name="controller" type="controller"/>
+  <xsd:element name="view"       type="view"/>
+  <xsd:element name="script"     type="script"/>
+
+  <xsd:complexType name="controller">
+    <xsd:sequence>
+      <xsd:element name="script" type="script" minOccurs="0"
+                   maxOccurs="unbounded"/>
+      <xsd:element name="node" type="node" 
+      minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="script">
+    <xsd:annotation>
+      <xsd:documentation>
+        A simple script element.  May contain actual javascript to be
+        evaluated.  The contained javascript is expected to be in a CDATA block.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute use="required" name="type" type="xsd:string"/>
+        <xsd:attribute use="required" name="src" type="xsd:anyURI"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="node">
+    <xsd:sequence>
+      <xsd:element name="action" type="action" 
+        minOccurs="1" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute use="optional" name="id" type="xsd:string"/>
+    <xsd:attribute use="optional" name="class" type="xsd:string"/>
+    <xsd:attribute use="optional" name="context" type="xsd:string"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="action">
+    <xsd:sequence>
+      <xsd:element name="transform" type="transform"
+        minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+
+    <xsd:attribute use="required" name="type" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>
+          The type of DOM event to act upon.
+        </xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute use="required" name="handler" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>
+          The handler function to execute.  Will either be a method of an
+          object (given an object reference name for the object container) or
+          the full name of a method referred to from the global scope.  Dot
+          notation "name spaces" are resolved and traversed accordingly.
+        </xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute use="optional" name="object" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>
+          The context object for execution of the handler method.  This can
+          either by a reference name for an object loaded from the provided
+          container (Joice for instance) or null if the function name should be
+          resolved within the global scope.
+        </xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+  </xsd:complexType>
+
+  <xsd:complexType name="transform">
+    <xsd:sequence>
+      <xsd:element name="param" type="transform-param"
+        minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+
+    <xsd:attribute use="optional" name="type" type="xsd:string"/>
+    <xsd:attribute use="required" name="context" type="xsd:string"/>
+    <xsd:attribute use="required" name="src" type="xsd:anyURI"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="param">
+    <xsd:sequence/>
+    <xsd:attribute name="name" value="xsd:string"/>
+    <xsd:attribute name="value" value="xsd:string"/>
+  </xsd:complexType>
+</xsd:schema>

@@ -224,7 +224,12 @@ function Context (config) {
                 args.push( initializer[arg.type](id, arg.value) )
             }
 
-            var obj = ctor.call(scope, args)
+            /* This is really broken.  Ideally we'd be using new ctor (), but
+             * we can't do that with an array.  And an array is all we have.
+             * The only way to really do this is with some rather funky code
+             * generation.  */
+            var obj = {}
+            ctor.apply(obj, args)
 
             for (var key in spec.props) {
                 var prop = spec.props[key]

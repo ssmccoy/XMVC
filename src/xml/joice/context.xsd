@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+      targetNamespace="http://www.blisted.org/ns/joice/"
+      xmlns="http://www.blisted.org/ns/joice">
+  
+  <xsd:annotation>
+    <xsd:documentation>
+      The joice configuration format...
+    </xsd:documentation>
+  </xsd:annotation>
+
+  <xsd:element name="context" type="context"/>
+
+  <xsd:complexType name="context">
+    <xsd:sequence>
+      <xsd:element name="object" type="object"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="object">
+    <xsd:sequence>
+      <xsd:element name="property" type="property-spec"/>
+      <xsd:element name="argument" type="argument-spec"/>
+    </xsd:sequence>
+
+    <xsd:attribute use="optional" name="id"          type="xsd:ID"/>
+    <xsd:attribute use="required" name="constructor" type="xsd:string"/>
+    <xsd:attribute use="optional" name="scope"       type="xsd:string"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="argument-spec">
+    <xsd:sequence>
+      <xsd:element name="object" type="object" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+
+    <xsd:attribute use="optional" name="value"  type="xsd:string"/>
+    <xsd:attribute use="optional" name="object" type="xsd:IDREF"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="property-spec">
+    <xsd:extension base="argument-spec">
+      <xsd:attribute use="required" name="name" type="xsd:string"/>
+    </xsd:extension>
+  </xsd:complexType>
+
+</xsd:schema>
