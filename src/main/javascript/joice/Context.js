@@ -325,9 +325,9 @@ function Context (config) {
                 var prop = spec.props[key]
                 obj[key] = initializer[prop.type](id, prop.value)
             }
-        }
 
-        return obj
+            return obj
+        }
     }
 
     function Context_initializeObject (id, spec) {
