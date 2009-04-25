@@ -1,6 +1,5 @@
 
-load("xmvc/new.js")
-
+load("xmvc/ControllerScope.js")
 
 var scope = new xmvc.ControllerScope()
 

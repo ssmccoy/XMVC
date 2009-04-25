@@ -67,11 +67,29 @@ function XMLConfigurationFilter (properties) {
     }
 }
 
+/**
+ * @class Context Configuration Error.
+ *
+ * <p>An extension of {@link Error} thrown when an error occurs in a given
+ * configuration.</p>
+ * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
+ */
 function ContextConfigurationError (message) {
     this.message = message
 }
 ContextConfigurationError.prototype = new Error()
 
+/**
+ * @constructor Create an XML Context Configuration.
+ * @param context The context to configure.
+ *
+ * @class An XML configuration for a joice context.
+ *
+ * <p>Configure a joice context using DOM.  This class wraps a context and
+ * initializes it using object specifications constructed from the supplied DOM
+ * structure.</p>
+ * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
+ */
 function XMLContextConfiguration (context) {
     var specs       = {}
 
@@ -126,8 +144,8 @@ function XMLContextConfiguration (context) {
                 var name = specElement.getAttribute("name")
 
                 if (name == null) {
-                    throw new DefinitionError("All properties must have a " +
-                        "name attribute")
+                    throw new ContextConfigurationError("All properties must " +
+                            " have a name attribute")
                 }
 
                 spec.setProperty(name, Context_parseProperty(property))

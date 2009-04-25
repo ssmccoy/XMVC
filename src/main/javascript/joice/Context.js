@@ -7,131 +7,40 @@
  * XML format.  It's meant to be plugged into (somewhat crudely) by simply
  * ignoring any type of element which doesn't fit in the Joice namespace of
  * <code>http://www.blisted.org/ns/joice</code>.</p>
+ *
+ * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
  */
 
 var JOICENS = "http://www.blisted.org/ns/joice/"
-var JOICENS_OBJECT = "object"
+var JOICENS_OBJECT   = "object"
 var JOICENS_PROPERTY = "property"
 var JOICENS_ARGUMENT = "argument"
 
 /**
- * A scope.
- *
- * <p>This object is placeholder for documentation.  A scope, in Joice, is a
- * storage point for a type of context where objects might be created and
- * stored.  Every object definition in Joice has a unique identifier, and the
- * presence of an identifier in a given scope (as reported by the Scope
- * implementation) defines whether a reference to an object specification
- * creates a new instance of an object when it's being referenced, or not.</p>
- *
- * <p>Scopes are intended to be largely (with the exception of {@link
- * SingletonScope}) external to Joice.  Example scopes would be a thread scope
- * in a multithreadded environment which keys all of it's storage off of the
- * local thread id, or a transactional scope which is aware of a database
- * connection.</p>
- *
- * <p>This scope is <em>not</em> implemented and <strong>will</strong> error
- * when used.</p>
- *
- * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
+ * An error occured within a joice context.
  */
-function Scope () {
-    /** 
-     * The name of the given scope.
-     * @type String
-     */
-    this.name = "scope"
-
-    /**
-     * Fetch or create an object of a given id.
-     *
-     * <p>Given an id for an object, and a factory for creating the object,
-     * either fetch the object from the active scope or create one.  Must never
-     * return null.</p>
-     * 
-     * @param {Number} id The unique identifier of the object definition.
-     * @param {ObjectFactory} factory The factory for the object.
-     * @return The object created by the given {@link ObjectFactory}
-     */
-    this.get = function Scope_get (id, factory) {
-        throw new Error("SCOPE NOT IMPLEMENTED")
-    }
-
-    /**
-     * Remove the given object from this scope.
-     *
-     * <p>Called during cleanups and when a dependent scope exits.  This object
-     * should remove the object of the given id from the active context.</p>
-     *
-     * @param {Number} id The unique identifier of the given object definition.
-     * @return The object removed from the active scope.
-     */
-    this.remove = function Scope_remove (id) {
-        throw new Error("SCOPE NOT IMPLEMENTED")
-    }
+function ContextError (message) {
+    this.message = message
 }
+ContextError.prototype = new Error()
 
 /**
- * @class A create-once scope.
+ * @constructor Create a new property specification.
  *
- * <p>This {@link Scope} implementation provides a simple stateful bean scope
- * which lives for the duration of the object.</p>
+ * <p>Given a type and value, create a property specification.  If the type is
+ * <code>object</code> expected that the given value is an {@link
+ * ObjectSpecification}.  If the type is <code>value</code> an actual value
+ * such as a {@link String}, {@link Number} or {@link Array} is expected.</p>
  *
- * @see Scope
+ * @param {String} type The type of property.
+ * @param {Object} value The value of the property.
+ *
+ * @class The specification of a property.
+ *
+ * <p>A specification of a property or argument.  This simply wraps either an
+ * {@link ObjectSpecification} or an actual value.</p>
  * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
  */
-function SingletonScope () {
-    this.name = "singleton"
-
-    var beans = {}
-
-    this.get = function SingletonScope_get (id, factory) {
-        if (id in beans) {
-            return beans[id]
-        }
-        else {
-            return beans[id] = factory.createObject()
-        }
-    }
-
-    this.remove = function SingletonScope_remove (id) {
-        return delete beans[id]
-    }
-}
-SingletonScope.prototype = new Scope()
-
-/**
- * @class A create always scope.
- *
- * <p>This scope simply always creates the given object and never stores a
- * reference to it.</p>
- * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
- */
-function PrototypeScope () {
-    this.name = "prototype"
-
-    this.get = function PrototypeScope_get (id, factory) {
-        return factory.createObject()
-    }
-
-    this.remove = function PrototypeScope_remove (id) {
-        return true
-    }
-}
-PrototypeScope.prototype = new Scope()
-
-function Sequence () {
-    var curval = 0
-
-    this.getCurrentValue = function () {
-        return curval
-    }
-
-    this.getNextValue = function () {
-        return curval++
-    }
-}
-
 function PropertySpecification (type, value) {
     this.type  = type
     this.value = value
@@ -175,190 +84,6 @@ function ObjectSpecification (scope, ctor, args, props) {
     this.addArgument = function (value) {
         this.args.push(value)
     }
-}
-
-/**
- * @constructor Create a new configuration filter.
- *
- * @param {Properties} The given properties object to use for value lookups.
- *
- * @class Interpolates variables with the value of a property.
- * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
- */
-function DOMConfigurationFilter (properties) {
-    /* The \ isn't needed within a character class, I know, but it stops vim
-     * from matching it. */
-    var variable = /\$\{([^\}]*)\}/g
-
-    var lookupPropertyReplacement = function (match, token, position, string) {
-        return properties.getProperty(token)
-    }
-    
-    /**
-     * Configure the given string through interpolation.
-     *
-     * <p>Given a string which may contain variable references to properties,
-     * substitute all variable identifiers with the value of the property they
-     * refer to.</p>
-     *
-     * @return A string which has had all variables references replaced.
-     * @throws ConfigurationError If a reference to an undefined property is
-     * located.
-     */
-    this.configure = function (value) {
-        return value.replace(variable, lookupPropertyReplacement)
-    }
-
-    /**
-     * Interpolate variables in attribute values.
-     *
-     * <p>Recursively descend the given element and replace all attribute
-     * values with an interpolated version of the given attribute value.
-     * Interpolation performs a regular expression based replacement for
-     * property names enclosed in <code>${</code> and <code>}</code>.  Modifies
-     * the attribute nodes in place.</p>
-     *
-     * @throws ConfigurationError If a reference to an undefined property is
-     * located.
-     */
-    this.filter = function (element) {
-        if (element.hasChildNodes) {
-            var children = element.childNodes
-
-            for (var i = 0; i < children.length; i++) {
-                this.filter(children[i])
-            }
-        }
-
-        if (element.hasAttributes) {
-            var attributes = element.attributes
-
-            for (var i = 0; i < attributes.length; i++) {
-                attribute.value = this.configure(attribute.value)
-            }
-        }
-    }
-
-    this.parseConfig = function (element) {
-        this.filter(element)
-
-        context.parseConfig(element)
-    }
-}
-
-function ContextConfigurationError (message) {
-    this.message = message
-}
-ContextConfigurationError.prototype = new Error()
-
-function XMLContextConfiguration (context) {
-    var specs       = {}
-
-    /**
-     * Vivify an object of the given id.
-     *
-     * @private
-     */
-    function vivifyObject (id) {
-        if (typeof specs[id] != "undefined") {
-            return specs[id]
-        }
-        else {
-            var spec = new ObjectSpecification()
-
-            specs[id] = spec
-            spec.name = id
-
-            return spec
-        }
-    }
-
-    function Context_parseProperty (element) {
-        if (element.hasAttribute("value")) {
-            return new PropertySpecification("value",
-                element.getAttribute("value"))
-        }
-        else if (element.hasAttribute("object")) {
-            return new PropertySpecification("object",
-                vivifyObject(element.getAttribute("object")))
-        }
-        else if (element.hasChildren) {
-            return new PropertySpecification("object", 
-                Context_parseObject(element.firstChild))
-        }
-        else {
-            /* TODO Throw a configuration error... */
-        }
-    }
-
-    function Context_parseObject (element) {
-        var id    = element.getAttribute("id")
-        var spec  = id != null ? vivifyObject(id) : new ObjectSpecification()
-
-        obj.scope = element.getAttribute("scope") || "singleton"
-        var children = element.getChildNodes
-
-        for (var i = 0; i < children.length; i++) {
-            var property = children[i]
-
-            if (property.localName == "property") {
-                var name = specElement.getAttribute("name")
-
-                if (name == null) {
-                    throw new DefinitionError("All properties must have a " +
-                        "name attribute")
-                }
-
-                spec.setProperty(name, Context_parseProperty(property))
-            }
-            else if (property.localName == "argument") {
-                spec.addArgument(Context_parseProperty(property))
-            }
-            else {
-                /* TODO Throw a configuration error... */
-            }
-        }
-
-        spec.ctor  = element.getAttribute("constructor")
-        spec.scope = element.getAttribute("scope") || "singleton"
-
-        /* An internal unique identifier for the object.  This is used in
-         * scopes, scopes have no reference to the bean name.  This is a big
-         * deviation from the spring container, but it prevents bean name
-         * generation and thus prevents the possibility of making references to
-         * beans with generated names. */
-        spec.name  = id
-
-        return spec
-    }
-
-    function Context_parseConfig (config) {
-        var possibleObjects = config.documentElement.childNodes
-        var specs = []
-
-        for (var i = 0; i < possibleObjects.length; i++) {
-            var possibleObject = possibleObjects[i]
-
-            if (possibleObjects.namespaceURI == JOICENS &&
-                    possibleObjects.localName == JOICENS_OBJECT) {
-                Context_parseObject(object)
-            }
-        }
-
-        for (var key in specs) {
-            var ctor = specs[key].ctor
-
-            if (typeof ctor == "undefined") {
-                throw new ContextConfigurationError(
-                    "Unable to find object definition with id \"\f\"".format(
-                      key))
-            }
-
-            context.addSpecification(specs[key])
-        }
-    }
-
-    this.parseConfig = Context_parseConfig
 }
 
 /**
@@ -511,8 +236,8 @@ function Context () {
      */
     this.addScope = function (name, scope) {
         if (name in scopes) {
-            throw new Error("Cannot add scope " + name + " to container, a " +
-                "scope with such name already exists")
+            throw new ContextError("Cannot add scope " + name + 
+                " to container, a scope with such name already exists")
         }
 
         scopes[name] = scope
