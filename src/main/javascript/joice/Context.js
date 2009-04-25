@@ -14,56 +14,6 @@ var JOICENS_OBJECT = "object"
 var JOICENS_PROPERTY = "property"
 var JOICENS_ARGUMENT = "argument"
 
-function ResolverError (message) {
-    this.message = message
-}
-
-ResolverError.prototype = new Error()
-
-/**
- * @constructor
- * Create a resolver.
- *
- * <p>Given a specific scope (expected to be an object of javascript scope)
- * create a resolver for that scope.</p>
- *
- * @param scope The object scope to start the search(es) at.
- *
- * @class A reflective resolver.
- * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
- */
-function Resolver (scope) {
-    /**
-     * Reflectively resolve a given name into a reference.
-     *
-     * <p>Breaks up dot-notation of the supplied identifier name and transcends
-     * the current resolver scope for a reference to the given object.</p>
-     *
-     * @return {Object} reference if any is found.
-     * @throws ResolverError if any undefined reference is located.
-     */
-    this.resolve = function (namespace) {
-        var ref = scope
-
-        var tokens = namespace.split(/\./)
-
-        for (var i = 0; i < tokens.length; i++) {
-            ref = ref[tokens[i]]
-
-            if (ref == undefined) break
-        }
-
-        if (ref == undefined) {
-            var currentName = tokens.splice(0, i).join(".")
-
-            throw new ResolverError("Unable to resolve supplied name: " +
-                    namespace + " (undefined found at: " + currentName)
-        }
-
-        return ref
-    }
-}
-
 /**
  * A scope.
  *
@@ -170,6 +120,319 @@ function PrototypeScope () {
 }
 PrototypeScope.prototype = new Scope()
 
+function Sequence () {
+    var curval = 0
+
+    this.getCurrentValue = function () {
+        return curval
+    }
+
+    this.getNextValue = function () {
+        return curval++
+    }
+}
+
+function PropertySpecification (type, value) {
+    this.type  = type
+    this.value = value
+}
+
+/**
+ * @constructor Create a new object specification.
+ *
+ * @param scope A reference to the encapsulating scope object.
+ * @param ctor The constructor to use.
+ * @param args An array of arguments to pass to the constructor.
+ * @param props A map ({}) of properties to set.
+ */
+function ObjectSpecification (scope, ctor, args, props) {
+    /**
+     * @type {Number} The unique identifier for this specification in the
+     * context it's registered to.
+     */
+    this.id = null
+    /**
+     * @type {String} The scope object.
+     */
+    this.scope = scope
+    /**
+     * @type {String} The object constructor
+     */
+    this.ctor  = ctor
+    /**
+     * @type {Array} A list of constructor argument specifications.
+     */
+    this.args  = args
+    /**
+     * @type {Object} A map of property specifications.
+     */
+    this.props = props
+
+    this.setProperty = function (key, value) {
+        this.props[key] = value
+    }
+
+    this.addArgument = function (value) {
+        this.args.push(value)
+    }
+}
+
+/**
+ * @constructor Create a new configuration filter.
+ *
+ * @param {Properties} The given properties object to use for value lookups.
+ *
+ * @class Interpolates variables with the value of a property.
+ * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
+ */
+function DOMConfigurationFilter (properties) {
+    /* The \ isn't needed within a character class, I know, but it stops vim
+     * from matching it. */
+    var variable = /\$\{([^\}]*)\}/g
+
+    var lookupPropertyReplacement = function (match, token, position, string) {
+        return properties.getProperty(token)
+    }
+    
+    /**
+     * Configure the given string through interpolation.
+     *
+     * <p>Given a string which may contain variable references to properties,
+     * substitute all variable identifiers with the value of the property they
+     * refer to.</p>
+     *
+     * @return A string which has had all variables references replaced.
+     * @throws ConfigurationError If a reference to an undefined property is
+     * located.
+     */
+    this.configure = function (value) {
+        return value.replace(variable, lookupPropertyReplacement)
+    }
+
+    /**
+     * Interpolate variables in attribute values.
+     *
+     * <p>Recursively descend the given element and replace all attribute
+     * values with an interpolated version of the given attribute value.
+     * Interpolation performs a regular expression based replacement for
+     * property names enclosed in <code>${</code> and <code>}</code>.  Modifies
+     * the attribute nodes in place.</p>
+     *
+     * @throws ConfigurationError If a reference to an undefined property is
+     * located.
+     */
+    this.filter = function (element) {
+        if (element.hasChildNodes) {
+            var children = element.childNodes
+
+            for (var i = 0; i < children.length; i++) {
+                this.filter(children[i])
+            }
+        }
+
+        if (element.hasAttributes) {
+            var attributes = element.attributes
+
+            for (var i = 0; i < attributes.length; i++) {
+                attribute.value = this.configure(attribute.value)
+            }
+        }
+    }
+
+    this.parseConfig = function (element) {
+        this.filter(element)
+
+        context.parseConfig(element)
+    }
+}
+
+function ContextConfigurationError (message) {
+    this.message = message
+}
+ContextConfigurationError.prototype = new Error()
+
+function XMLContextConfiguration (context) {
+    var specs       = {}
+
+    /**
+     * Vivify an object of the given id.
+     *
+     * @private
+     */
+    function vivifyObject (id) {
+        if (typeof specs[id] != "undefined") {
+            return specs[id]
+        }
+        else {
+            var spec = new ObjectSpecification()
+
+            specs[id] = spec
+            spec.name = id
+
+            return spec
+        }
+    }
+
+    function Context_parseProperty (element) {
+        if (element.hasAttribute("value")) {
+            return new PropertySpecification("value",
+                element.getAttribute("value"))
+        }
+        else if (element.hasAttribute("object")) {
+            return new PropertySpecification("object",
+                vivifyObject(element.getAttribute("object")))
+        }
+        else if (element.hasChildren) {
+            return new PropertySpecification("object", 
+                Context_parseObject(element.firstChild))
+        }
+        else {
+            /* TODO Throw a configuration error... */
+        }
+    }
+
+    function Context_parseObject (element) {
+        var id    = element.getAttribute("id")
+        var spec  = id != null ? vivifyObject(id) : new ObjectSpecification()
+
+        obj.scope = element.getAttribute("scope") || "singleton"
+        var children = element.getChildNodes
+
+        for (var i = 0; i < children.length; i++) {
+            var property = children[i]
+
+            if (property.localName == "property") {
+                var name = specElement.getAttribute("name")
+
+                if (name == null) {
+                    throw new DefinitionError("All properties must have a " +
+                        "name attribute")
+                }
+
+                spec.setProperty(name, Context_parseProperty(property))
+            }
+            else if (property.localName == "argument") {
+                spec.addArgument(Context_parseProperty(property))
+            }
+            else {
+                /* TODO Throw a configuration error... */
+            }
+        }
+
+        spec.ctor  = element.getAttribute("constructor")
+        spec.scope = element.getAttribute("scope") || "singleton"
+
+        /* An internal unique identifier for the object.  This is used in
+         * scopes, scopes have no reference to the bean name.  This is a big
+         * deviation from the spring container, but it prevents bean name
+         * generation and thus prevents the possibility of making references to
+         * beans with generated names. */
+        spec.name  = id
+
+        return spec
+    }
+
+    function Context_parseConfig (config) {
+        var possibleObjects = config.documentElement.childNodes
+        var specs = []
+
+        for (var i = 0; i < possibleObjects.length; i++) {
+            var possibleObject = possibleObjects[i]
+
+            if (possibleObjects.namespaceURI == JOICENS &&
+                    possibleObjects.localName == JOICENS_OBJECT) {
+                Context_parseObject(object)
+            }
+        }
+
+        for (var key in specs) {
+            var ctor = specs[key].ctor
+
+            if (typeof ctor == "undefined") {
+                throw new ContextConfigurationError(
+                    "Unable to find object definition with id \"\f\"".format(
+                      key))
+            }
+
+            context.addSpecification(specs[key])
+        }
+    }
+
+    this.parseConfig = Context_parseConfig
+}
+
+/**
+ * @constructor Generate a constructor and an interface to invoke it.
+ *
+ * @param methodName The name of the method to call in constructor context.
+ * @param argumentCount The <em>maximum</em> number of arguments expected
+ * to be passed to the constructor.
+ * 
+ * @class A simple code generator for constructor function wrappers.
+ *
+ * <p>This wraps the construction of functions.  This is a work-around for
+ * the fact that javascript does not <em>actually</em> have reflective
+ * constructor invocation.  This works by using code generation to generate
+ * a function which wraps a call to a constructor and returns the object
+ * which is created.</p>
+ *
+ * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
+ */
+function GeneratedConstructor (methodName, argumentCount) {
+    var params = []
+
+    for (var i = 0; i < argumentCount; i++) {
+        params.push("arguments[" + i + "]")
+    }
+
+    var code = "return new " + methodName + "(" + params.join(",") +  ")"
+
+    var ctor = new Function(code)
+
+    this.newInstance = function (params) {
+        return ctor.apply(this, params)
+    }
+}
+
+/**
+ * @class A simple factory for objects generated from a context.
+ *
+ * <p>This is a simple factory for an object.  It maintains references to
+ * object, parameter and argument specifications.  
+ */
+function ObjectFactory (context, spec) {
+    this.context = context
+    this.ctor    = new GeneratedConstructor(spec.ctor, spec.args.length)
+
+    this.createObject = function () {
+        var args  = []
+
+        for (var i = 0; i < spec.args.length; i++) {
+            var arg = spec.args[i]
+            args.push( this.initializer[arg.type](id, arg.value) )
+        }
+
+        var obj = this.ctor.newInstance(args)
+
+        for (var key in spec.props) {
+            var prop = spec.props[key]
+            obj[key] = this.initializer[prop.type](id, prop.value)
+        }
+
+        return obj
+    }
+}
+ObjectFactory.prototype = {
+    initializer: {
+        "object": function (property) {
+            this.context.getObject(property.value.id)
+        },
+        "value": function (property) {
+            /* For now, values ignore scope */
+            return property.value
+        }
+    }
+}
 
 /**
  * @constructor
@@ -183,15 +446,59 @@ PrototypeScope.prototype = new Scope()
  * dependency injection container.  It resovles object names to their
  * specification and assembles them accrodingly.
  */
-function Context (config) {
-    var initialized = false
-    var specs       = {}
-    var resolver    = new Resolver(window)
-    var lastId      = 0
-
-    var scopes      = {
+function Context () {
+    var initialized    = false
+    var sequence       = new Sequence()
+    var specifications = []
+    var labels         = {}
+    var factories      = []
+    /* Default scopes */
+    var scopes         = {
         "singleton": new SingletonScope(),
         "prototype": new PrototypeScope()
+    }
+
+    this.addSpecification = function (specification) {
+        /* Skip specifications we've already seen. */
+        if (specification.id != null) return
+
+        var id     = sequence.getNextValue()
+        var name   = specification.name
+        var args   = specification.args
+        var params = specification.params
+
+        for (var i = 0; i < args.length; i++) {
+            if (args[i].type == "object") {
+                this.addSpecification(args[i])
+            }
+        }
+
+        specifications[id] = specification
+        factories[id]      = new ObjectFactory(this, specification)
+        labels[name]       = id
+
+        specification.id   = id
+    }
+
+    this.getSpecification = function (id) {
+        return specifications[id]
+    }
+
+    this.getObject = function (id) {
+        var specification = specifications[id]
+
+        if (typeof specifications != "undefined") {
+            var scope = scopes[ specification.scope ]
+
+            return scope.get(id, factories[id])
+        }
+        else {
+            return null
+        }
+    }
+
+    this.load = function (name) {
+        return this.getObject(labels[name])
     }
 
     /**
@@ -209,145 +516,5 @@ function Context (config) {
         }
 
         scopes[name] = scope
-    }
-
-    /**
-     * Vivify an object of the given id.
-     *
-     * @private
-     */
-    function vivifyObject (id) {
-        if (typeof specs[id] != "undefined") {
-            return specs[id]
-        }
-        else {
-            return specs[id] = {}
-        }
-    }
-
-    function Context_parseObject (element) {
-        var id    = element.getAttribute("id")
-        var obj   = id != null ? vivifyObject(id) : {}
-
-        var ref   = resolver.resolve(element.getAttribute("constructor"))
-        var args  = []
-        var props = {}
-
-        var children = element.getChildNodes
-
-        for (var i = 0; i < children.length; i++) {
-            var specElement = children[i]
-            var propSpec = {}
-
-            if (specElement.localName == "property") {
-                var name = specElement.getAttribute("name")
-
-                if (name == null) {
-                    throw new DefinitionError("All properties must have a " +
-                        "name attribute")
-                }
-
-                /* Place reference for time being, even though propSpec is empty */
-                props[name] = propSpec
-            }
-
-            if (specElement.localName == "argument") {
-                args.push(propSpec)
-            }
-
-            if (specElement.hasAttribute("value")) {
-                propSpec.type  = "value"
-                propSpec.value = specElement.getAttribute("value")
-            }
-            else if (specElement.hasAttribute("object")) {
-                /* For object references, vivify the specification of the object
-                 * and then store a reference to the specification as the
-                 * value. */
-                propSpec.type  = "object"
-                propSpec.value = vivifyObject(propSpec.getAttribute("object"))
-            }
-            else if (specElement.hasChildren) {
-                propSpec.type  = "object"
-                propSpec.value = Context_parseObject(element.firstChild)
-            }
-        }
-
-        /* An internal unique identifier for the object.  This is used in
-         * scopes, scopes have no reference to the bean name.  This is a big
-         * deviation from the spring container, but it prevents bean name
-         * generation and thus prevents the possibility of making references to
-         * beans with generated names. */
-        obj.id    = lastId++
-        obj.props = props
-        obj.args  = args
-        obj.ref   = ref
-        obj.scope = element.getAttribute("scope") || "singleton"
-
-        return obj
-    }
-
-    function Context_parseConfig (config) {
-        var possibleObjects = config.documentElement.childNodes
-
-        for (var i = 0; i < possibleObjects.length; i++) {
-            var possibleObject = possibleObjects[i]
-
-            if (possibleObjects.namespaceURI == JOICENS &&
-                    possibleObjects.localName == JOICENS_OBJECT) {
-                Context_parseObject(object)
-            }
-        }
-    }
-
-    var initializer = {
-        "object": Context_initializeObject,
-        "value": function (id, value) { return value }
-    }
-
-    function ObjectFactory (id, spec) {
-        this.createObject = function () {
-            var ctor  = spec.ref
-            var args  = []
-
-            for (var i = 0; i < spec.args.length; i++) {
-                var arg = spec.args[i]
-                args.push( initializer[arg.type](id, arg.value) )
-            }
-
-            /* This is really broken.  Ideally we'd be using new ctor (), but
-             * we can't do that with an array.  And an array is all we have.
-             * The only way to really do this is with some rather funky code
-             * generation.  */
-            var obj = {}
-            ctor.apply(obj, args)
-
-            for (var key in spec.props) {
-                var prop = spec.props[key]
-                obj[key] = initializer[prop.type](id, prop.value)
-            }
-
-            return obj
-        }
-    }
-
-    function Context_initializeObject (id, spec) {
-        var scope = spec.scope
-
-        return scope.get(id, spec)
-    }
-
-    this.load = function (name) {
-        if (!initialized) {
-            Context_parseConfig(config)
-        }
-
-        var objspec = specs[name]
-
-        if (typeof objspec != undefined) {
-            return Context_initializeObject(objspec.id, objspec)
-        }
-        else {
-            return null
-        }
     }
 }

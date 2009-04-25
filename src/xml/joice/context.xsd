@@ -6,6 +6,32 @@
   <xsd:annotation>
     <xsd:documentation>
       The joice configuration format...
+
+      <context>
+        <object id="http-client" constructor="HttpClient" scope="prototype"/>
+
+        <object id="detacher" constructor="Detacher" scope="singleton"/>
+
+        <object id="foo" constructor="ArticleRequest" scope="document">
+          <argument object="http-client"/>
+          <property name="detacher" object="detacher"/>
+        </object>
+
+        <object id="upload" constructor="SpreadsheetUpload" scope="singleton">
+          <argument>
+            <object constructor="UploadThrottle">
+              <argument>
+                <object constructor="PriorityQueue">
+                  <argument value="${max.queue.size}"/>
+                </object>
+              </argument>
+            </object>
+          </argument>
+          <argument>
+            <object constructor="FileSelector"/>
+          </argument>
+        </object>
+      </context>
     </xsd:documentation>
   </xsd:annotation>
 
