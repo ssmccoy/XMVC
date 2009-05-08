@@ -107,10 +107,10 @@ function GeneratedConstructor (methodName, argumentCount) {
     var params = []
 
     for (var i = 0; i < argumentCount; i++) {
-        params.push("arguments[" + i + "]")
+        params.push("arguments[\f]".format(i))
     }
 
-    var code = "return new " + methodName + "(" + params.join(",") +  ")"
+    var code = "return new \f(\f)".format(methodName, params.join(","))
 
     var ctor = new Function(code)
 
@@ -200,13 +200,17 @@ function Context () {
 
         specifications[id] = specification
         factories[id]      = new ObjectFactory(this, specification)
-        labels[name]       = id
-
         specification.id   = id
+
+        if (typeof name != "undefined") labels[name] = id
     }
 
     this.getSpecification = function (id) {
         return specifications[id]
+    }
+
+    this.getIdForLabel = function (label) {
+        return labels[label]
     }
 
     this.getObject = function (id) {
@@ -236,8 +240,7 @@ function Context () {
      */
     this.addScope = function (name, scope) {
         if (name in scopes) {
-            throw new ContextError("Cannot add scope " + name + 
-                " to container, a scope with such name already exists")
+            throw new ContextError("Cannot redefine scope \f".format(name))
         }
 
         scopes[name] = scope

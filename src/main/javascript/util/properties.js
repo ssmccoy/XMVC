@@ -247,6 +247,21 @@ function Properties (defaults) {
     this.setProperty = function (key, value) {
         this.properties[key] = value
     }
+
+    /**
+     * Merge properties.
+     *
+     * <p>Given a properties object, merge all properties from the given
+     * properties object into the current properties object, overriding any
+     * properties which were previously defined.</p>
+     *
+     * @param {Properties} properties The properties object to merge in.
+     */
+    this.mergeProperties = function (properties) {
+        for (var key in properties.properties) {
+            this.properties[key] = properties.properties[key]
+        }
+    }
 }
 
 /**

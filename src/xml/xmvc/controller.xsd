@@ -39,6 +39,11 @@
               <param name="format" value="Added a new foo: {foo#name}"/>
             </transform>
           </action>
+          <action type="load" object="foo" handler="bar">
+            <!-- Example script transformer -->
+            <transform type="script" path="//[@id=status]"
+              object="transformer-object" handler="method"/>
+          </action>
         </node>
 
         <node path="//foo">
@@ -138,6 +143,20 @@
       <xsd:enumeration value="replace"/>
     </xsd:restriction>
   </xsd:simpleType>
+
+  <xsd:complexType name="script-transform">
+    <xsd:annotation>
+      <xsd:documentation>
+        A transformer implemented by a javascript object loaded through Joice.
+        This transformer makes no assertions about what type of objects are set
+        in, but does expect a DOM object as a result.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:extension base="transform">
+      <xsd:attribute use="required" name="object" type="xsd:string"/>
+      <xsd:attribute use="required" name="handler" type="xsd:string"/>
+    </xsd:extension>
+  </xsd:complexType>
 
   <xsd:complexType name="transform">
     <xsd:sequence>

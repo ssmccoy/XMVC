@@ -6,13 +6,15 @@
  * @class Interpolates variables with the value of a property.
  * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
  */
-function XMLConfigurationFilter (properties) {
+function XMLConfigurationFilter (configurator) {
+    this.properties = new Properties()
+
     /* The \ isn't needed within a character class, I know, but it stops vim
      * from matching it. */
     var variable = /\$\{([^\}]*)\}/g
 
     var lookupPropertyReplacement = function (match, token, position, string) {
-        return properties.getProperty(token)
+        return this.properties.getProperty(token)
     }
     
     /**
@@ -63,7 +65,7 @@ function XMLConfigurationFilter (properties) {
     this.parseConfig = function (element) {
         this.filter(element)
 
-        context.parseConfig(element)
+        configurator.parseConfig(element)
     }
 }
 
@@ -92,6 +94,9 @@ ContextConfigurationError.prototype = new Error()
  */
 function XMLContextConfiguration (context) {
     var specs       = {}
+    var loaders     = {
+        "text/javascript": new HttpJavaScriptLoader() 
+    }
 
     /**
      * Vivify an object of the given id.
@@ -103,7 +108,20 @@ function XMLContextConfiguration (context) {
             return specs[id]
         }
         else {
-            var spec = new ObjectSpecification()
+            /* If it doesn't exist in our local defs (as in it wasn't defined
+             * here or previously used), then try pulling it from the Joice
+             * context.  If that fails, assume it's a new definition we haven't
+             * parsed yet.
+             */
+            var jid  = context.getIdForLabel(id)
+            var spec = null
+
+            if (typeof jid != "undefined") {
+                spec = context.getSpecification(jid)
+            }
+            else {
+                spec = new ObjectSpecification()
+            }
 
             specs[id] = spec
             spec.name = id
@@ -171,6 +189,21 @@ function XMLContextConfiguration (context) {
         return spec
     }
 
+    function Context_parseScript (script) {
+        var type = script.getAttribute("type")
+        var src  = script.getAttribute("src")
+
+        var loader = loaders[type]
+
+        if (typeof loader == "undefined") {
+            throw new ContextConfigurationError(
+                    "Unable to load \f type \f: \f".format(
+                        src, type, "No appropriate script loader for type"))
+        }
+
+        loader.load(script.getAttribute("src"))
+    }
+
     /**
      * Parse a configuration.
      *
@@ -189,8 +222,13 @@ function XMLContextConfiguration (context) {
         for (var i = 0; i < possibleObjects.length; i++) {
             var possibleObject = possibleObjects[i]
 
-            if (possibleObjects.namespaceURI == JOICENS &&
-                    possibleObjects.localName == JOICENS_OBJECT) {
+            if (possibleObject.namespaceURI == JOICENS &&
+                    possibleObject.localName == JOICENS_SCRIPT) {
+                Context_parseScript(object)
+            }
+
+            if (possibleObject.namespaceURI == JOICENS &&
+                    possibleObject.localName == JOICENS_OBJECT) {
                 Context_parseObject(object)
             }
         }
