@@ -163,6 +163,7 @@ function PropertiesCache () {
  * Similar to a Java properties resource bundle.
  */
 function Properties (defaults) {
+    this.properties = {}
     var initURI = function (uri) {
         this.properties = this.cache[uri]
     }

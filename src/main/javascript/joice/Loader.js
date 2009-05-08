@@ -19,6 +19,10 @@ function JoiceLoader () {
     this.fetch = function (url, callback) {
         var request = new XMLHttpRequest()
 
+        if (!/\.xml$/.test(url)) {
+            request.overrideMimeType('text/plain; charset=x-user-defined')
+        }
+
         request.open("GET", url, true)
         request.send(null)
 
@@ -34,12 +38,7 @@ function JoiceLoader () {
 
                     case 200:
                     case 0:
-                        try {
-                            callback(request.responseXML, request.responseText)
-                        }
-                        catch (error) {
-                            window.alert(error.message)
-                        }
+                        callback(request.responseXML, request.responseText)
                 }
             }
         }
@@ -50,8 +49,10 @@ function JoiceLoader () {
         var loader = this
 
         var parseProperties = function (xml, text) {
-            var properties = propertiesParser.parseProperties(text)
-            filter.properties.mergeProperties(properties)
+            /* TODO: Fix this! */
+            propertiesParser.parseProperties(text)
+
+            filter.addProperties(propertiesParser)
 
             if (--propertiesLoading == 0) {
                 loader.loadConfigs()
@@ -63,7 +64,7 @@ function JoiceLoader () {
 
     this.loadConfigs = function () {
         var parseConfig = function (xml, text) {
-            configurator.parseConfig(xml.documentElement)
+            filter.parseConfig(xml.documentElement)
         }
 
         for (var i = 0; i < configs.length; i++) {

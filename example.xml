@@ -2,7 +2,7 @@
 
 <context xmlns="http://www.blisted.org/ns/joice/">
   <object id="bar" constructor="Bar">
-    <argument value="Hello!"/>
+    <argument value="${message}"/>
   </object>
 
   <object id="foo" constructor="Foo">

@@ -15,14 +15,18 @@ var JOICENS_ARGUMENT = "argument"
  * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
  */
 function XMLConfigurationFilter (configurator) {
-    this.properties = new Properties()
+    var properties = new Properties()
 
     /* The \ isn't needed within a character class, I know, but it stops vim
      * from matching it. */
     var variable = /\$\{([^\}]*)\}/g
 
     var lookupPropertyReplacement = function (match, token, position, string) {
-        return this.properties.getProperty(token)
+        return properties.getProperty(token)
+    }
+
+    this.addProperties = function (newProperties) {
+        properties.mergeProperties(newProperties)
     }
     
     /**
@@ -61,10 +65,12 @@ function XMLConfigurationFilter (configurator) {
             }
         }
 
-        if (element.hasAttributes) {
+        if (element.hasAttributes()) {
             var attributes = element.attributes
 
             for (var i = 0; i < attributes.length; i++) {
+                var attribute = attributes[i]
+
                 attribute.value = this.configure(attribute.value)
             }
         }
