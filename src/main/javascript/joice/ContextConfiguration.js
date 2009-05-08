@@ -1,3 +1,11 @@
+
+var JOICENS = "http://www.blisted.org/ns/joice/"
+var JOICENS_SCRIPT   = "script"
+var JOICENS_OBJECT   = "object"
+var JOICENS_PROPERTY = "property"
+var JOICENS_ARGUMENT = "argument"
+
+
 /**
  * @constructor Create a new configuration filter.
  *
@@ -104,7 +112,7 @@ function XMLContextConfiguration (context) {
      * @private
      */
     function vivifyObject (id) {
-        if (typeof specs[id] != "undefined") {
+        if (id in specs) {
             return specs[id]
         }
         else {
@@ -145,20 +153,21 @@ function XMLContextConfiguration (context) {
         }
         else {
             /* TODO Throw a configuration error... */
+            throw new ContextConfigurationError("Properties must either have" +
+                "a value attribute, an object attribute, or children")
         }
     }
 
     function Context_parseObject (element) {
         var id    = element.getAttribute("id")
-        var spec  = id != null ? vivifyObject(id) : new ObjectSpecification()
+        var spec  = vivifyObject(id)
 
-        obj.scope = element.getAttribute("scope") || "singleton"
-        var children = element.getChildNodes
+        var children = element.childNodes
 
         for (var i = 0; i < children.length; i++) {
             var property = children[i]
 
-            if (property.localName == "property") {
+            if (property.localName == JOICENS_PROPERTY) {
                 var name = specElement.getAttribute("name")
 
                 if (name == null) {
@@ -168,7 +177,7 @@ function XMLContextConfiguration (context) {
 
                 spec.setProperty(name, Context_parseProperty(property))
             }
-            else if (property.localName == "argument") {
+            else if (property.localName == JOICENS_ARGUMENT) {
                 spec.addArgument(Context_parseProperty(property))
             }
             else {
@@ -217,19 +226,18 @@ function XMLContextConfiguration (context) {
      */
     this.parseConfig = function (config) {
         var possibleObjects = config.childNodes
-        var specs = []
 
         for (var i = 0; i < possibleObjects.length; i++) {
             var possibleObject = possibleObjects[i]
 
             if (possibleObject.namespaceURI == JOICENS &&
                     possibleObject.localName == JOICENS_SCRIPT) {
-                Context_parseScript(object)
+                Context_parseScript(possibleObject)
             }
 
             if (possibleObject.namespaceURI == JOICENS &&
                     possibleObject.localName == JOICENS_OBJECT) {
-                Context_parseObject(object)
+                Context_parseObject(possibleObject)
             }
         }
 

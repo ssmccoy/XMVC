@@ -11,11 +11,6 @@
  * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
  */
 
-var JOICENS = "http://www.blisted.org/ns/joice/"
-var JOICENS_OBJECT   = "object"
-var JOICENS_PROPERTY = "property"
-var JOICENS_ARGUMENT = "argument"
-
 /**
  * An error occured within a joice context.
  */
@@ -71,11 +66,12 @@ function ObjectSpecification (scope, ctor, args, props) {
     /**
      * @type {Array} A list of constructor argument specifications.
      */
-    this.args  = args
+    this.args  = []
+
     /**
      * @type {Object} A map of property specifications.
      */
-    this.props = props
+    this.props = {}
 
     this.setProperty = function (key, value) {
         this.props[key] = value
@@ -115,7 +111,14 @@ function GeneratedConstructor (methodName, argumentCount) {
     var ctor = new Function(code)
 
     this.newInstance = function (params) {
-        return ctor.apply(this, params)
+        try {
+            return ctor.apply(this, params)
+        }
+        catch (error) {
+            window.alert(error.message)
+            throw new ContextError("Unable to initialize \f: \f".format(
+                methodName, error.message))
+        }
     }
 }
 
@@ -126,7 +129,6 @@ function GeneratedConstructor (methodName, argumentCount) {
  * object, parameter and argument specifications.  
  */
 function ObjectFactory (context, spec) {
-    this.context = context
     this.ctor    = new GeneratedConstructor(spec.ctor, spec.args.length)
 
     this.createObject = function () {
@@ -134,14 +136,14 @@ function ObjectFactory (context, spec) {
 
         for (var i = 0; i < spec.args.length; i++) {
             var arg = spec.args[i]
-            args.push( this.initializer[arg.type](id, arg.value) )
+            args.push( this.initializer[arg.type](context, arg) )
         }
 
         var obj = this.ctor.newInstance(args)
 
         for (var key in spec.props) {
             var prop = spec.props[key]
-            obj[key] = this.initializer[prop.type](id, prop.value)
+            obj[key] = this.initializer[prop.type](context, prop)
         }
 
         return obj
@@ -149,10 +151,10 @@ function ObjectFactory (context, spec) {
 }
 ObjectFactory.prototype = {
     initializer: {
-        "object": function (property) {
-            this.context.getObject(property.value.id)
+        "object": function (context, property) {
+            return context.getObject(property.value.id)
         },
-        "value": function (property) {
+        "value": function (context, property) {
             /* For now, values ignore scope */
             return property.value
         }
@@ -194,7 +196,7 @@ function Context () {
 
         for (var i = 0; i < args.length; i++) {
             if (args[i].type == "object") {
-                this.addSpecification(args[i])
+                this.addSpecification(args[i].value)
             }
         }
 
@@ -202,7 +204,9 @@ function Context () {
         factories[id]      = new ObjectFactory(this, specification)
         specification.id   = id
 
-        if (typeof name != "undefined") labels[name] = id
+        if (typeof name != "undefined") {
+            labels[name] = id
+        }
     }
 
     this.getSpecification = function (id) {
@@ -216,7 +220,7 @@ function Context () {
     this.getObject = function (id) {
         var specification = specifications[id]
 
-        if (typeof specifications != "undefined") {
+        if (typeof specification != "undefined") {
             var scope = scopes[ specification.scope ]
 
             return scope.get(id, factories[id])

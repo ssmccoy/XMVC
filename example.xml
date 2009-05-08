@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<context xmlns="http://www.blisted.org/ns/joice/">
+  <object id="bar" constructor="Bar">
+    <argument value="Hello!"/>
+  </object>
+
+  <object id="foo" constructor="Foo">
+    <argument object="bar"/>
+  </object>
+</context>

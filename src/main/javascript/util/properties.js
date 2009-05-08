@@ -7,17 +7,6 @@
  * ---------------------------------------------------------------------------- 
  */
 
-/* If use exists...use it... */
-if (use) {
-    use("util.cbclient")
-}
-else {
-    if (!CBClient) {
-        /* Assume we're in a browser, or XULRunner, or something */
-        window.alert("properties.js depends on cbclient.js")
-    }
-}
-
 /**
  * Create a properties parser error.
  *
