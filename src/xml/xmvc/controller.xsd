@@ -3,14 +3,70 @@
       targetNamespace="http://www.blisted.org/ns/xmvc/"
       xmlns="http://www.blisted.org/ns/xmvc/">
 
+  <xsd:annotation>
+    <xsd:documentation>
+      <controller xmlns="http://www.blisted.org/ns/xmvc/">
+        <script type="text/javascript" src="foo.js"/>
+        <script type="text/javascript" src="bar.js"/>
+        <script type="text/javascript" src="baz.js"/>
+
+        <!-- The DI configuration -->
+        <context xmlns="http://www.blisted.org/ns/joice/">
+          <properties src="foo.properties"/>
+
+          <object id="bar" class="Bar"/>
+
+          <!-- XMVC Adds a "document" scope which keeps a relative chain of
+          scopes attached to each element.  When the element is detached from
+          the tree, the scope is detached.  This allows one to attach objects
+          at a given level and assume that any updates to elements within that
+          part of the DOM tree within the scope of the first reference are
+          always acting on that object. -->
+          <object id="foo" class="Foo" scope="document">
+            <argument object="bar"/>
+          </object>
+        </context>
+
+        <!-- When someone clicks on a node with the id of foo -->
+        <node id="foo">
+          <action type="click" object="foo" handler="bar">
+            <!-- add a new foo to the foo-list -->
+            <transform path="//[@id=foo-list]" src="add-foo.xsl"
+            behavior="append"/>
+            <!-- Update the status box -->
+            <transform path="//[@id=status]" src="update-status.xsl"
+            behavior="replace">
+              <param name="format" value="Added a new foo: {foo#name}"/>
+            </transform>
+          </action>
+        </node>
+
+        <node path="//foo">
+          <action type="click" object="foo" handler="bar">
+            <!-- add a new foo to the foo-list -->
+            <transform path="//[@id=foo-list]" src="add-foo.xsl"
+            behavior="append"/>
+            <!-- Update the status box -->
+            <transform path="//[@id=status]" src="update-status.xsl"
+            behavior="replace">
+              <param name="format" value="Added a new foo: {foo#name}"/>
+            </transform>
+          </action>
+        </node>
+      </controller>
+    </xsd:documentation>
+  </xsd:annotation>
+
   <xsd:element name="controller" type="controller"/>
-  <xsd:element name="view"       type="view"/>
+  <xsd:element name="node"       type="node"/>
   <xsd:element name="script"     type="script"/>
 
   <xsd:complexType name="controller">
     <xsd:sequence>
       <xsd:element name="script" type="script" minOccurs="0"
                    maxOccurs="unbounded"/>
+      <!-- A joice context is required -->
+      <xsd:element name="context" type="joice:context"/>
       <xsd:element name="node" type="node" 
       minOccurs="0" maxOccurs="unbounded"/>
     </xsd:sequence>
@@ -38,7 +94,7 @@
     </xsd:sequence>
     <xsd:attribute use="optional" name="id" type="xsd:string"/>
     <xsd:attribute use="optional" name="class" type="xsd:string"/>
-    <xsd:attribute use="optional" name="context" type="xsd:string"/>
+    <xsd:attribute use="optional" name="path" type="xsd:string"/>
   </xsd:complexType>
 
   <xsd:complexType name="action">
@@ -76,6 +132,13 @@
     </xsd:attribute>
   </xsd:complexType>
 
+  <xsd:simpleType name="transform-behavior">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="append"/>
+      <xsd:enumeration value="replace"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
   <xsd:complexType name="transform">
     <xsd:sequence>
       <xsd:element name="param" type="transform-param"
@@ -83,7 +146,9 @@
     </xsd:sequence>
 
     <xsd:attribute use="optional" name="type" type="xsd:string"/>
-    <xsd:attribute use="required" name="context" type="xsd:string"/>
+    <xsd:attribute use="optional" name="populate" type="xsd:boolean"/>
+    <xsd:attribute use="required" name="path" type="xsd:string"/>
+    <xsd:attribute use="required" name="behavior" type="transform-behavior"/>
     <xsd:attribute use="required" name="src" type="xsd:anyURI"/>
   </xsd:complexType>
 

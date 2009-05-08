@@ -236,7 +236,24 @@ xmvc.Controller = function (document, xpathFactory, xsltFactory) {
         /* Let the browser do a cycle, since most browsers need to at this
          * point (mozilla included).  Following that cycle, start the recursive
          * population... */
-        setTimeout(function () { controller.populate(node, node.scope) }, 0)
+        setTimeout(function () {
+            controller.populate(node, node.scope) 
+
+            /* Run through all handlers associated with an xpath expression.
+             * Execute the xpath expression in the context of the new node. */
+            for (var i = 0; i < pathHandlers; i++) {
+                handler = pathHandlers[i]
+
+                /* Use the IE XPath API since it's given to us from sarissa. */
+                var matches = node.selectNodes(handler.path)
+
+                for (var j = 0; j < matches.length; j++) {
+                    matches[j].addEventListener(handler.type, handler.event, false)
+                }
+            }
+
+            node.dispatchEvent(document.createEvent("load"))
+        }, 0)
     }
 
      /* TODO Figure out if there is some tricky way where we can actually
@@ -245,15 +262,32 @@ xmvc.Controller = function (document, xpathFactory, xsltFactory) {
       * since we've recently introduced scopes, but it'd be faster than this
       * recursive descent. */
     this.populate = function (element, scope) {
-        var currentScope = new xmvc.ControllerScope(scope)
-        element.scope = currentScope
+        if (typeof element.scope == "undefined") {
+            var currentScope = new xmvc.ControllerScope(scope)
+            element.scope = currentScope
+        }
 
         if (element.nodeType == Node.ELEMENT_NODE) {
-            /* XXX IEtoW3C */
-            if (!element.addEventListener) hookupDOMEventsOn(node)
+            var id  = element.getAttribute("id")
+            var cls = element.getAttribute("class")
 
-            for (update in updates) {
-                update.applyEvents(element, scope)
+            if (id != null && id in idHandlers) {
+                var handler = idHandlers[id]
+
+                element.addEventListener(handler.type, handler.event, false)
+            }
+
+            if (cls != null) {
+                var classes = cls.split(/\s+/)
+
+                for (var i = 0; i < classes.length; i++) {
+                    if (classes[i] in classHandlers) {
+                        var handler = classHandlers[classes[i]]
+
+                        element.addEventListener(handler.type, handler.event,
+                        false)
+                    }
+                }
             }
         }
 

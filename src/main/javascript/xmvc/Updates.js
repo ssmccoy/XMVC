@@ -14,7 +14,7 @@
 xmvc.View = function (id, clazz, actions) {
     this.actions = function () { return actions }
     this.id      = function () { return id      }
-    this.class   = function () { return clazz   }
+    this.clazz   = function () { return clazz   }
 
     /**
      * Apply actions for this view to the supplied node, if applicable.  Note

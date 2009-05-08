@@ -171,8 +171,19 @@ function XMLContextConfiguration (context) {
         return spec
     }
 
-    function Context_parseConfig (config) {
-        var possibleObjects = config.documentElement.childNodes
+    /**
+     * Parse a configuration.
+     *
+     * <p>Given a top level joice configuration element, parse the
+     * the element as a joice configuration and create a series of {@link
+     * ObjectSpecification} objects.  When all {@link ObjectSpecification}
+     * elements are created and their interdependancies resolved, register them
+     * with the {@link Context}.</p>
+     *
+     * @param {Element} config The top level configuration element.
+     */
+    this.parseConfig = function (config) {
+        var possibleObjects = config.childNodes
         var specs = []
 
         for (var i = 0; i < possibleObjects.length; i++) {
@@ -196,6 +207,4 @@ function XMLContextConfiguration (context) {
             context.addSpecification(specs[key])
         }
     }
-
-    this.parseConfig = Context_parseConfig
 }

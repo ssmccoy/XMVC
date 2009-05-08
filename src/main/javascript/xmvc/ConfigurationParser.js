@@ -188,7 +188,7 @@ xmvc.ConfigurationParser = function (controller, sourceFetcherFactory, uri) {
         var top = response.document.documentElement
 
         if (top.localName != "controller" ||
-            top.namespaceURI != "http://www.blisted.org/MVD") {
+            top.namespaceURI != "http://www.blisted.org/ns/xmvc/") {
             window.error("Invalid configuration file")
         }
 

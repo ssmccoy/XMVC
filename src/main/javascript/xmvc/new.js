@@ -59,7 +59,7 @@ xmvc = {}
 xmvc.ActionType = {
     object: {},
     method: {},
-    class: {}
+    clazz: {}
 }
 
 /**
