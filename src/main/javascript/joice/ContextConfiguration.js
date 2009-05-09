@@ -174,7 +174,7 @@ function XMLContextConfiguration (context) {
             var property = children[i]
 
             if (property.localName == JOICENS_PROPERTY) {
-                var name = specElement.getAttribute("name")
+                var name = property.getAttribute("name")
 
                 if (name == null) {
                     throw new ContextConfigurationError("All properties must " +
