@@ -4,7 +4,7 @@
  * <p>A simple web program bootstrap for the Joice container.</p>
  */
 
-function JoiceLoader () {
+function JoiceLoader (global) {
     var propertiesLoading = 0
     var configsLoading    = 0
     var configs           = []
@@ -113,14 +113,17 @@ function JoiceLoader () {
         var configLocations = this.findGlobalConfigs()
     }
 
-    this.attachOnload = function (object) {
+    if (typeof global != "undefined") {
         /* Use DOM Level 0 */
-        var oldOnload = object.onload
+        var oldOnload = global.onload
         var loader = this
 
-        object.onload = function () {
+        global.onload = function () {
             loader.load()
             oldOnload.apply(this, arguments)
         }
+
+        /* Make the context available in the supplied object scope */
+        global.context = this.context
     }
 }

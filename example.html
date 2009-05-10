@@ -21,19 +21,17 @@
       }
     }
 
-    var loader = new JoiceLoader()
-
     window.onload = function () {
       var elem = document.getElementById("hello")
       
       elem.onclick = function () {
         /* Our foo might not be loaded yet... */
-        var foo  = loader.context.load("foo")
+        var foo  = context.load("foo")
         foo.hello()
       }
     }
 
-    loader.attachOnload(window)
+    new JoiceLoader(window)
     </script>
     <link rel="context" type="text/xml" href="example.xml"/>
     <link rel="properties" type="text/plain" href="example.properties"/>
