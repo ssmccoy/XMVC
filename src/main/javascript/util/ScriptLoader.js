@@ -6,12 +6,20 @@
 var global = this
 
 function HttpJavaScriptLoader (globals) {
+    var skipTable = {}
+
     this.onload  = function () {}
     this.onerror = function (error) {
         window.alert(error)
     }
 
     this.load = function (script) {
+        /* If the script is already in the skip table, we're either fetching it
+         * or have already evaled it. */
+        if (script in skipTable) return
+
+        skipTable[script] = true
+
         var loader  = this
         var request = new HttpRequest(script)
 
