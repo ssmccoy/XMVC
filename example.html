@@ -2,6 +2,7 @@
   <head>
     <title>An Joice Example</title>
     <script type="text/javascript" src="src/main/javascript/string/format.js"></script>
+    <script type="text/javascript" src="src/main/javascript/util/HttpClient.js"></script>
     <script type="text/javascript" src="src/main/javascript/util/ScriptLoader.js"></script>
     <script type="text/javascript" src="src/main/javascript/util/Sequence.js"></script>
     <!-- TODO fix case -->
@@ -11,16 +12,6 @@
     <script type="text/javascript" src="src/main/javascript/joice/ContextConfiguration.js"></script>
     <script type="text/javascript" src="src/main/javascript/joice/Loader.js"></script>
     <script type="text/javascript">
-    function Bar (message) {
-      this.message = message
-    }
-
-    function Foo (bar) {
-      this.hello = function () {
-        window.alert(bar.message)
-      }
-    }
-
     window.onload = function () {
       var elem = document.getElementById("hello")
       
@@ -30,9 +21,9 @@
         foo.hello()
       }
     }
-
-    new JoiceLoader(window)
     </script>
+    <!-- Bootstrap automates attachment -->
+    <script type="text/javascript" src="src/main/javascript/joice/Bootstrap.js"></script>
     <link rel="context" type="text/xml" href="example.xml"/>
     <link rel="properties" type="text/plain" href="example.properties"/>
   </head>

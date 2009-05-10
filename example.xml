@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <context xmlns="http://www.blisted.org/ns/joice/">
+  <script type="text/javascript" src="example.js"/>
+
   <object id="bar" constructor="Bar">
     <property name="message" value="${message}"/>
   </object>

@@ -205,6 +205,7 @@ function XMLContextConfiguration (context) {
     }
 
     function Context_parseScript (script) {
+        window.alert("Parsing script...")
         var type = script.getAttribute("type")
         var src  = script.getAttribute("src")
 
@@ -216,7 +217,7 @@ function XMLContextConfiguration (context) {
                         src, type, "No appropriate script loader for type"))
         }
 
-        loader.load(script.getAttribute("src"))
+        loader.load(src)
     }
 
     /**
