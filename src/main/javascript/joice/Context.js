@@ -73,6 +73,11 @@ function ObjectSpecification (scope, ctor, args, props) {
      */
     this.props = {}
 
+    /**
+     * @type {String} The initialization strategy, defaults to lazy.
+     */
+    this.init = "lazy"
+
     this.setProperty = function (key, value) {
         this.props[key] = value
     }
@@ -207,6 +212,12 @@ function Context () {
         if (typeof name != "undefined") {
             labels[name] = id
         }
+
+        /* If we've already initialized, be sure to load this object if it's
+         * eager.  Otherwise wait for the init sequence to occur. */
+        if (initialized) {
+            this.getObject(id)
+        }
     }
 
     this.getSpecification = function (id) {
@@ -248,5 +259,40 @@ function Context () {
         }
 
         scopes[name] = scope
+    }
+
+    /**
+     * Initialize the context.
+     *
+     * <p>This loads any eagerly initialized objects.  The loader invokes this
+     * operation once it's finished fetching and processing all known
+     * configurations.  Subsequent calls to this operation perform no
+     * action.</p>
+     *
+     * @return {Boolean} true if the container was initialized, false
+     * otherwise.
+     */
+    this.initialize = function () {
+        if (!initialized) {
+            var specificationCount = specifications.length
+
+            for (var i = 0; i < specificationCount; i++) {
+                var specification = specifications[i]
+
+                /* Note: It's known here that an eager specification with a
+                 * prototype scope will quite literally just be created and
+                 * garbage collected unless it attaches itself to something.  I
+                 * consider this undefined behavior and really don't care if
+                 * someone finds a reason to try that. */
+                if (specification.init == "eager") {
+                    this.getObject(specification.id)
+                }
+            }
+
+            return initialized = true
+        }
+        else {
+            return false
+        }
     }
 }

@@ -23,7 +23,7 @@ function HttpJavaScriptLoader (globals) {
             var code   = null
 
             try {
-                window.eval(source)
+                global.eval(source)
             }
             catch (error) {
                 loader.onerror(error)

@@ -191,6 +191,7 @@ function XMLContextConfiguration (context) {
             }
         }
 
+        spec.init  = element.getAttribute("initialization")
         spec.ctor  = element.getAttribute("constructor")
         spec.scope = element.getAttribute("scope") || "singleton"
 
@@ -205,7 +206,6 @@ function XMLContextConfiguration (context) {
     }
 
     function Context_parseScript (script) {
-        window.alert("Parsing script...")
         var type = script.getAttribute("type")
         var src  = script.getAttribute("src")
 

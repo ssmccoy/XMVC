@@ -6,10 +6,21 @@
 
 function JoiceLoader (global) {
     var propertiesLoading = 0
-    var configsLoading    = 0
+    var configResults     = []
+    var propertiesResults = []
     var configs           = []
     var properties        = []
-
+    
+    /* TODO Use the semaphore to track whether or not we're actually allowed to
+     * start parsing.  Fetch & queue all XML fragments and properties files
+     * until all are available, and then parse (in order) properties &
+     * configurations.
+     *
+     * TODO Think about optimizing the script loader so that non-tokenized
+     * scripts get loaded immediately (this way they'll be available as soon as
+     * possible, and can be factored into the semaphore behavior).
+     */
+    var semaphore        = new Semaphore()
     var propertiesParser = new PropertiesParser()
 
     this.context     = new Context()
@@ -18,10 +29,6 @@ function JoiceLoader (global) {
 
     this.fetch = function (url, callback) {
         var request = new XMLHttpRequest()
-
-        if (!/\.xml$/.test(url)) {
-            request.overrideMimeType('text/plain; charset=x-user-defined')
-        }
 
         request.open("GET", url, true)
         request.send(null)
@@ -44,35 +51,56 @@ function JoiceLoader (global) {
         }
     }
 
-    this.loadProperties = function (url) {
-        propertiesLoading++
-        var loader = this
+    this.initialize = function () {
+        /* If there are no leases, then everything we've dispatched should have
+         * returned.  Otherwise we'll be waiting for a lease to be returned.
+         */
+        if (semaphore.isAvailable()) {
+            properties.each(function (text) {
+                var parser = new PropertiesParser()
 
+                parser.parseProperties(text)
+                filter.addProperties(parser)
+            })
+
+            configs.each(function (config) {
+                filter.parseConfig(config.documentElement)
+            })
+
+            context.initialize()
+        }
+    }
+
+    this.loadProperties = function (url) {
+        semaphore.acquire()
+
+        var loader = this
         var parseProperties = function (xml, text) {
             /* TODO: Fix this! */
-            propertiesParser.parseProperties(text)
+            properties.push(text)
 
-            filter.addProperties(propertiesParser)
-
-            if (--propertiesLoading == 0) {
-                loader.loadConfigs()
-            }
+            semaphore.release()
+            loader.initialize()
         }
 
         this.fetch(url, parseProperties)
     }
 
-    this.loadConfigs = function () {
+    this.loadConfig = function (url) {
+        semaphore.acquire()
+
+        var loader = this
         var parseConfig = function (xml, text) {
-            filter.parseConfig(xml.documentElement)
+            configs.push(xml.documentElement)
+
+            semaphore.release()
+            loader.initialize()
         }
 
-        for (var i = 0; i < configs.length; i++) {
-            this.fetch(configs[i], parseConfig)
-        }
+        this.fetch(url, parseConfig)
     }
 
-    this.findGlobalConfigs = function () {
+    this.loadGlobalConfigs = function () {
         var links           = document.getElementsByTagName("link")
 
         for (var i = 0; i < links.length; i++) {
@@ -83,8 +111,9 @@ function JoiceLoader (global) {
                     window.alert("Loader configuration error: " + 
                         "expected text plain for properties")
                 }
-
-                properties.push(link.getAttribute("href"))
+                else {
+                    this.loadProperties(link.getAttribute("href"))
+                }
             }
 
             if (link.getAttribute("rel") == "context") {
@@ -94,23 +123,15 @@ function JoiceLoader (global) {
                     window.alert("Loader configuration error: " +
                             "Invalid content type")
                 }
-
-                configs.push(link.getAttribute("href"))
+                else {
+                    this.loadConfig(link.getAttribute("href"))
+                }
             }
-        }
-
-        if (properties.length) {
-            for (var i = 0; i < properties.length; i++) {
-                this.loadProperties(properties[i])
-            }
-        }
-        else {
-            this.loadConfigs()
         }
     }
 
     this.load = function () {
-        var configLocations = this.findGlobalConfigs()
+        this.loadGlobalConfigs()
     }
 
     if (typeof global != "undefined") {
@@ -120,7 +141,7 @@ function JoiceLoader (global) {
 
         global.onload = function () {
             loader.load()
-            oldOnload.apply(this, arguments)
+            if (oldOnload) oldOnload.apply(this, arguments)
         }
 
         /* Make the context available in the supplied object scope */

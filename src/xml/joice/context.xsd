@@ -10,7 +10,8 @@
       <context>
         <object id="http-client" constructor="HttpClient" scope="prototype"/>
 
-        <object id="detacher" constructor="Detacher" scope="singleton"/>
+        <object id="detacher" constructor="Detacher" initialization="eager"
+        scope="singleton"/>
 
         <object id="foo" constructor="ArticleRequest" scope="document">
           <argument object="http-client"/>
@@ -37,6 +38,13 @@
 
   <xsd:element name="context" type="context"/>
 
+  <xsd:simpleType name="initialization">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="lazy"/>
+      <xsd:enumeration value="eager"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
   <xsd:complexType name="context">
     <xsd:sequence>
       <xsd:element name="object" type="object"/>
@@ -49,9 +57,10 @@
       <xsd:element name="argument" type="argument-spec"/>
     </xsd:sequence>
 
-    <xsd:attribute use="optional" name="id"          type="xsd:ID"/>
-    <xsd:attribute use="required" name="constructor" type="xsd:string"/>
-    <xsd:attribute use="optional" name="scope"       type="xsd:string"/>
+    <xsd:attribute use="optional" name="id"             type="xsd:ID"/>
+    <xsd:attribute use="optional" name="initialization" type="initilaization"/>
+    <xsd:attribute use="required" name="constructor"    type="xsd:string"/>
+    <xsd:attribute use="optional" name="scope"          type="xsd:string"/>
   </xsd:complexType>
 
   <xsd:complexType name="argument-spec">

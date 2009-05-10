@@ -2,26 +2,17 @@
   <head>
     <title>An Joice Example</title>
     <script type="text/javascript" src="src/main/javascript/string/format.js"></script>
+    <script type="text/javascript" src="src/main/javascript/array/each.js"></script>
     <script type="text/javascript" src="src/main/javascript/util/HttpClient.js"></script>
     <script type="text/javascript" src="src/main/javascript/util/ScriptLoader.js"></script>
     <script type="text/javascript" src="src/main/javascript/util/Sequence.js"></script>
+    <script type="text/javascript" src="src/main/javascript/util/Semaphore.js"></script>
     <!-- TODO fix case -->
     <script type="text/javascript" src="src/main/javascript/util/properties.js"></script>
     <script type="text/javascript" src="src/main/javascript/joice/Scope.js"></script>
     <script type="text/javascript" src="src/main/javascript/joice/Context.js"></script>
     <script type="text/javascript" src="src/main/javascript/joice/ContextConfiguration.js"></script>
     <script type="text/javascript" src="src/main/javascript/joice/Loader.js"></script>
-    <script type="text/javascript">
-    window.onload = function () {
-      var elem = document.getElementById("hello")
-      
-      elem.onclick = function () {
-        /* Our foo might not be loaded yet... */
-        var foo  = context.load("foo")
-        foo.hello()
-      }
-    }
-    </script>
     <!-- Bootstrap automates attachment -->
     <script type="text/javascript" src="src/main/javascript/joice/Bootstrap.js"></script>
     <link rel="context" type="text/xml" href="example.xml"/>

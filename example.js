@@ -9,3 +9,9 @@ function Foo (bar) {
     }
 }
 
+var element = document.getElementById("hello")
+
+element.onclick = function () {
+    var foo = context.load("foo")
+    foo.hello()
+}
