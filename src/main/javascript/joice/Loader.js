@@ -6,8 +6,6 @@
 
 function JoiceLoader (global) {
     var propertiesLoading = 0
-    var configResults     = []
-    var propertiesResults = []
     var configs           = []
     var properties        = []
     
@@ -20,7 +18,7 @@ function JoiceLoader (global) {
      * scripts get loaded immediately (this way they'll be available as soon as
      * possible, and can be factored into the semaphore behavior).
      */
-    var semaphore        = new Semaphore()
+    var semaphore        = new Semaphore(1)
     var propertiesParser = new PropertiesParser()
 
     this.context     = new Context()
@@ -64,7 +62,7 @@ function JoiceLoader (global) {
             })
 
             configs.each(function (config) {
-                filter.parseConfig(config.documentElement)
+                filter.parseConfig(config)
             })
 
             context.initialize()
