@@ -196,9 +196,15 @@ function XMLContextConfiguration (context, semaphore) {
             if (child.namespaceURI == JOICENS) {
                 var argument = doc.createElementNS(JOICENS, JOICENS_ARGUMENT)
 
-                /* Append a deeply cloned node.  You can't attach a node to a
-                 * document twice. */
-                argument.appendChild(child.cloneNode(true))
+                if (child.hasAttribute("object")) {
+                    argument.setAttribute("object",
+                            child.getAttribute("object"))
+                }
+                else {
+                    /* Append a deeply cloned node.  You can't attach a node to
+                     * a document twice. */
+                    argument.appendChild(child.cloneNode(true))
+                }
 
                 arrayObject.appendChild(argument)
             }
