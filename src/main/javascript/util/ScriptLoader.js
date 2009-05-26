@@ -5,7 +5,7 @@
 
 var global = this
 
-function HttpJavaScriptLoader (globals) {
+function HttpJavaScriptLoader (semaphore, globals) {
     var skipTable = {}
 
     this.onload  = function () {}
@@ -14,6 +14,12 @@ function HttpJavaScriptLoader (globals) {
     }
 
     this.load = function (script) {
+        /* TODO: This semaphore usage really doesn't belong here.  This is just
+         * a cheap quick way to make initialization wait for static script loading..
+         *
+         * Once I fix the initialization structure I should remove this.
+         */
+        semaphore.acquire()
         /* If the script is already in the skip table, we're either fetching it
          * or have already evaled it. */
         if (script in skipTable) return
@@ -27,6 +33,9 @@ function HttpJavaScriptLoader (globals) {
         request.get()
 
         request.callback = function (request) {
+            /* TODO Remove semaphore usage. */
+            semaphore.release()
+
             var source = request.responseText
             var code   = null
 

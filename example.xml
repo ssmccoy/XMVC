@@ -3,8 +3,23 @@
 <context xmlns="http://www.blisted.org/ns/joice/">
   <script type="text/javascript" src="example.js"/>
 
+  <object id="baz" constructor="Baz">
+    <argument>
+      <array>
+        <value>1</value>
+        <value>2</value>
+        <value>3</value>
+        <value>4</value>
+      </array>
+    </argument>
+  </object>
   <object id="bar" constructor="Bar">
     <property name="message" value="${message}"/>
+    <property name="test">
+      <object>
+        <property name="member" value="And anonymous objects..."/>
+      </object>
+    </property>
   </object>
 
   <object id="foo" constructor="Foo">

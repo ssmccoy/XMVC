@@ -2,6 +2,9 @@
 var JOICENS = "http://www.blisted.org/ns/joice/"
 var JOICENS_SCRIPT   = "script"
 var JOICENS_OBJECT   = "object"
+var JOICENS_VALUE    = "value"
+var JOICENS_ARRAY    = "array"
+var JOICENS_XML      = "xml"
 var JOICENS_PROPERTY = "property"
 var JOICENS_ARGUMENT = "argument"
 
@@ -42,6 +45,19 @@ function XMLConfigurationFilter (configurator) {
      */
     this.configure = function (value) {
         return value.replace(variable, lookupPropertyReplacement)
+    }
+
+    /**
+     * Test the given value for tokens which require replacement.
+     *
+     * <p>Given a string, test it for strings which would typically be
+     * interpolated and return the results of the test.</p>
+     *
+     * @return {Boolean} true if the value has interpolated properties in it,
+     * false otherwise.
+     */
+    this.hasProperties = function (value) {
+        return variable.test(value)
     }
 
     /**
@@ -106,10 +122,10 @@ ContextConfigurationError.prototype = new Error()
  * structure.</p>
  * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
  */
-function XMLContextConfiguration (context) {
+function XMLContextConfiguration (context, semaphore) {
     var specs       = {}
     var loaders     = {
-        "text/javascript": new HttpJavaScriptLoader() 
+        "text/javascript": new HttpJavaScriptLoader(semaphore) 
     }
 
     /**
@@ -118,7 +134,10 @@ function XMLContextConfiguration (context) {
      * @private
      */
     function vivifyObject (id) {
-        if (id in specs) {
+        if (id == null) {
+            return new ObjectSpecification()
+        }
+        else if (id in specs) {
             return specs[id]
         }
         else {
@@ -144,6 +163,50 @@ function XMLContextConfiguration (context) {
         }
     }
 
+    /* TODO This is a bit of a quick hack to add array support.  It really
+     * shouldn't use each element as a constructor argument since it creates
+     * somewhat garbage generated code that's unnecessary.  But it's not an
+     * enormous concern right now.
+     */
+    function Context_parseArray (element) {
+        /* TODO: If you're going to keep this, it might be better done with
+         * XSLT.  Same with the anonymous object syntax.
+         *
+         * Simply transform <array><value/><value/><value/></array> into
+         *
+         * <object constructor="Array">
+         *  <argument><value/></argument>
+         *  <argument><value/></argument>
+         *  <argument><value/></argument>
+         * </object>
+         */
+        var doc = element.ownerDocument
+        var arrayObject = doc.createElementNS(JOICENS, JOICENS_OBJECT)
+
+        arrayObject.setAttribute("constructor", "Array")
+
+        var children = element.childNodes
+
+        for (var i = 0; i < children.length; i++) {
+            var child = children[i]
+
+            /* If we don't filter out non-namespace values we end up with a
+             * bunch of elements that only have text nodes in them.  Another
+             * way to do this would be to check the node type. ;-) */
+            if (child.namespaceURI == JOICENS) {
+                var argument = doc.createElementNS(JOICENS, JOICENS_ARGUMENT)
+
+                /* Append a deeply cloned node.  You can't attach a node to a
+                 * document twice. */
+                argument.appendChild(child.cloneNode(true))
+
+                arrayObject.appendChild(argument)
+            }
+        }
+
+        return Context_parseObject(arrayObject)
+    }
+
     function Context_parseProperty (element) {
         if (element.hasAttribute("value")) {
             return new PropertySpecification("value",
@@ -153,9 +216,63 @@ function XMLContextConfiguration (context) {
             return new PropertySpecification("object",
                 vivifyObject(element.getAttribute("object")))
         }
-        else if (element.hasChildren) {
-            return new PropertySpecification("object", 
-                Context_parseObject(element.firstChild))
+        else if (element.hasChildNodes()) {
+            var children = element.childNodes
+            var matches  = 0
+            var result   = null
+            
+            for (var i = 0; i < children.length; i++) {
+                var child = children[i]
+
+                if (child.namespaceURI == JOICENS) switch (child.localName) {
+                    case JOICENS_OBJECT:
+                        /* {} is just new Object(), I'm assuming that's true on
+                         * all implementations it very well should be.  This
+                         * means <object><property name="foo"/></object> would
+                         * always create a new empty object.
+                         */
+                        child.setAttribute("constructor", "Object")
+
+                        matches++
+                        result = new PropertySpecification("object", 
+                                Context_parseObject(child))
+
+                        break
+
+                    case JOICENS_VALUE:
+                        var text = null
+
+                        if (child.hasChildNodes()) {
+                            text = child.firstChild.nodeValue
+                        }
+
+                        matches++
+                        result = new PropertySpecification("value", text)
+
+                        break
+
+                    case JOICENS_XML:
+                        matches++
+                        result = new PropertySpecification("value",
+                                child)
+
+                        break
+
+                    case JOICENS_ARRAY:
+                        matches++
+                        result = new PropertySpecification("object",
+                                Context_parseArray(child))
+                        break
+                }
+            }
+
+            if (matches != 1) {
+                throw new ContextConfigurationError("Properties may only " +
+                    "have a single child.  If multiple values are desired, " +
+                    "try the <array/> element instead.")
+            }
+
+            return result
         }
         else {
             /* TODO Throw a configuration error... */
@@ -205,7 +322,7 @@ function XMLContextConfiguration (context) {
         return spec
     }
 
-    function Context_parseScript (script) {
+    this.parseScript = function Context_parseScript (script) {
         var type = script.getAttribute("type")
         var src  = script.getAttribute("src")
 

@@ -209,7 +209,7 @@ function Context () {
         factories[id]      = new ObjectFactory(this, specification)
         specification.id   = id
 
-        if (typeof name != "undefined") {
+        if (typeof name != "undefined" && name != null) {
             labels[name] = id
         }
 

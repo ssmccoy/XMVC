@@ -22,7 +22,7 @@ function JoiceLoader (global) {
     var propertiesParser = new PropertiesParser()
 
     this.context     = new Context()
-    var configurator = new XMLContextConfiguration(this.context)
+    var configurator = new XMLContextConfiguration(this.context, semaphore)
     var filter       = new XMLConfigurationFilter(configurator)
 
     this.fetch = function (url, callback) {
@@ -49,39 +49,58 @@ function JoiceLoader (global) {
         }
     }
 
-    this.initialize = function () {
+    /* When the semaphore becomes available, we'll go ahead and configure our
+     * context and initialize it. */
+    semaphore.onavailable = function () {
         /* If there are no leases, then everything we've dispatched should have
          * returned.  Otherwise we'll be waiting for a lease to be returned.
          */
-        if (semaphore.isAvailable()) {
-            properties.each(function (text) {
-                var parser = new PropertiesParser()
+        properties.each(function (text) {
+            var parser = new PropertiesParser()
 
-                parser.parseProperties(text)
-                filter.addProperties(parser)
-            })
+            parser.parseProperties(text)
+            filter.addProperties(parser)
+        })
 
-            configs.each(function (config) {
-                filter.parseConfig(config)
-            })
+        configs.each(function (config) {
+            filter.parseConfig(config)
+        })
 
-            context.initialize()
-        }
+        context.initialize()
     }
 
     this.loadProperties = function (url) {
         semaphore.acquire()
 
-        var loader = this
         var parseProperties = function (xml, text) {
             /* TODO: Fix this! */
             properties.push(text)
 
             semaphore.release()
-            loader.initialize()
         }
 
         this.fetch(url, parseProperties)
+    }
+
+    this.filterDirectScripts = function (element) {
+        var children = element.childNodes
+
+        for (var i = 0; i < children.length; i++) {
+            var node = children[i]
+            if (node.localName == "script") {
+                /* We have a raw script.  Strip it out from it's parent so it
+                 * doesn't get parsed twice, and force the configurator to load
+                 * it now rather than later.
+                 *
+                 * TODO Create a way to track pending loaders prior to
+                 * initialization.
+                 */
+                if (!filter.hasProperties(node.getAttribute("src"))) {
+                    node.parentNode.removeChild(node)
+                    configurator.parseScript(node)
+                }
+            }
+        }
     }
 
     this.loadConfig = function (url) {
@@ -89,10 +108,11 @@ function JoiceLoader (global) {
 
         var loader = this
         var parseConfig = function (xml, text) {
-            configs.push(xml.documentElement)
+            var config = xml.documentElement
+            loader.filterDirectScripts(config)
+            configs.push(config)
 
             semaphore.release()
-            loader.initialize()
         }
 
         this.fetch(url, parseConfig)
