@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.blisted</groupId>
+  <artifactId>joice</artifactId>
+  <packaging>pom</packaging>
+  <version>0.1</version>
+  <name>Javascript Libraries</name>
+
+  <!--
+  <modules>
+    <module>extjs2-debug/trunk</module>
+    <module>extjs2-resources/trunk</module>
+    <module>prototype/trunk</module>
+    <module>crypto/trunk</module>
+    <module>xml4script/trunk</module>
+    <module>yuiloader-dom-event</module>
+    <module>extjs2-theme-gray</module>
+    <module>extjs2-slate-theme</module>
+    <module>jquery</module>
+    <module>jquery-ui</module>
+    <module>log4js</module>
+    <module>flXHR</module>
+  </modules>
+   -->
+  <repositories>
+    <repository>
+      <id>codehaus-mojo</id>
+      <url>http://repository.codehaus.org/org/codehaus/mojo/</url>
+    </repository>
+    <repository>
+      <id>McCoy &amp; Co Repository</id>
+      <url>http://mvn.mccoyco.com/repository/</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>Codehaus Snapshots</id>
+      <url>http://snapshots.repository.codehaus.org/</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>  <!-- Workaround for MNG-2974, see note below -->
+      </releases>
+    </pluginRepository>
+  </pluginRepositories>
+   
+  <build>
+  <!--
+    <extensions>
+      <extension>
+        <groupId>org.codehaus.mojo.javascript</groupId>
+        <artifactId>javascript-maven-extensions</artifactId>
+      </extension>
+    </extensions> -->
+    <plugins>
+      <outputDirectory>target/scripts</outputDirectory>
+      <testOutputDirectory>target/test-scripts</testOutputDirectory>
+
+      <plugin>
+        <groupId>org.codehaus.mojo.javascript</groupId>
+        <artifactId>javascript-maven-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <browserFileNames></browserFileNames>
+          <compressor>shrinksafe</compressor>
+          <!-- WATCH OUT: compression fails with this enabled.
+                   
+          <strip>;;;</strip>
+          -->
+          <descriptor>assembly.xml</descriptor>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>war-package</goal>
+              <goal>prepare-tests</goal>
+              <goal>jsunit</goal>
+              <goal>compress</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+   
+  <distributionManagement>
+    <repository>
+      <id>mvn.soashable.com</id>
+      <url>http://mvn.soashable.com:8180/artifactory/libs-releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>mvn.soashable.com</id>
+      <url>http://mvn.soashable.com:8180/artifactory/libs-snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+</project>
+
+

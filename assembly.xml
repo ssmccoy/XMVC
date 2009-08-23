@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<assembler>
+  <scripts>
+    <script>
+      <fileName>joice.js</fileName>
+      <includes>
+        <include>joice/Context.js</include>
+        <include>joice/ContextConfiguration.js</include>
+        <include>joice/Scope.js</include>
+        <include>util/Sequence.js</include>
+        <include>util/properties.js</include>
+      </includes>
+    </script>
+  </scripts>
+</assembler>
