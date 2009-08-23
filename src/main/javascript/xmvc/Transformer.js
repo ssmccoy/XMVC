@@ -1,17 +1,72 @@
 
-function Controller () {
-    var selections = []
+function Controller (document) {
+    if (typeof document == "undefined") document = window.document
+
+    var documentScope = new DocumentScope(document)
+    var selections    = []
+    var mustWalk      = false
+    var walkObservers = []
+
+    /* Register the scope with the global context as type "document" */
+    context.addScope("document", documentScope)
 
     this.addSelection = function (selection) {
         selections.push(selection)
     }
 
-    this.process = function (element) {
+    /**
+     * Adds a tree-walk observer. 
+     *
+     * <p>Adding tree-walk observers will cause the controller to notify all
+     * walk observers for each node added to the document.</p>
+     *
+     * @param observer.
+     */
+    this.addWalkObserver = function (walkObserver) {
+        mustWalk = true
+
+        walkObservers.push(walkObserver)
+    }
+
+    this.walk = function (element) {
+        var children = element.childNodes
+
+        for (var i = 0; i < children.length; i++) {
+            this.walk(children[i])
+        }
+
+        walkObservers.each(function (observer) {
+            observer.visit(element)
+        })
+    }
+
+    var handleProcessing = function (element) {
+        /* Walk the node if we have stuff to do... */
+        if (walkObservers.length) {
+            this.walk(element)
+        }
+
         /* Add the tree-walker here if you're going to add support for
          * tree-walking selector types. */
         selections.each(function (selection) {
             selection.attach(element)
         })
+    }
+
+    /**
+     * Process a given element (and it's descendants).
+     */
+    this.process = function (element) {
+        var controller = this
+        
+        /* Cycle in and out of the browser context to allow for rendering. */
+        window.setTimeout(function () { 
+            handleProcessing.call(controller, element)
+        }, 1)
+    }
+
+    this.addSelection = function (selection) {
+        selections.push(selection)
     }
 }
 
@@ -25,7 +80,7 @@ function Controller () {
  * given locator.  It then attaches all actions associated with this selection
  * to all notes which were returned by the locator.</p>
  */
-function Selection (locator) {
+function Selection (locator, documentScope) {
     var actions = {}
 
     this.addAction = function (type, action) {
@@ -48,8 +103,10 @@ function Selection (locator) {
     }
 }
 
-function Action (objectName, methodName, observer) {
+function Action (scope, objectName, methodName, observer) {
     this.handle = function (event, e) {
+        scope.select(this)
+
         var object = context.load(objectName)
 
         /* If the method returned a value, simulate a notification with it. */
@@ -84,21 +141,44 @@ function ReplaceMutator (controller) {
 
 function XPathLocator (expression) {
     this.locate = function (context) {
-        if (context == null) {
-            return document.selectSingleNode(expression)
+        if (context == null || typeof context == "undefined") {
+            context = document
         }
-        else {
-            return context.selectSingleNode(expression)
-        }
+        
+        return context.selectSingleNode(expression)
     }
 
     this.list = function (context) {
         if (context == null) {
-            return document.selectNodes(expression)
+            context = document
         }
-        else {
-            return context.selectNodes(expression)
+        
+        return context.selectNodes(expression)
+    }
+}
+
+function FastIdLocator (id) {
+    this.locate = function (context) {
+        if (context == null || typeof context == "undefined") {
+            context = document.documentElement
         }
+
+        var element = document.getElementById(id)
+
+        for (var cursor = element; cursor != null; cursor = cursor.parentNode)
+        {
+            if (cursor == context) {
+                return element;
+            }
+        }
+
+        return null;
+    }
+
+    this.list = function (context) {
+        var element = this.locate(context)
+
+        return element != null ? [ element ] : []
     }
 }
 
@@ -119,6 +199,10 @@ function TransformObserver (transformers, locator, mutator) {
     this.notify = function (input) {
         var modification = this.transform(input)
         var element      = locator.locate()
+
+        if (element == null) {
+            
+        }
 
         mutator.apply(element, modification)
     }
