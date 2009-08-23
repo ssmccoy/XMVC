@@ -1,4 +1,23 @@
 
+/**
+ * @class The eXtensible Markup View Controller.
+ *
+ * <p>This is a basic input event controller based on the <a
+ * href="http://www.w3.org/TR/DOM-Level-2-Events/">DOM Level 2 Event
+ * API</a> and built on top of the <a
+ * href="http://www.blisted.org/wiki/joice/">Joice Dependency Injection
+ * Framework</a>.</p>
+ *
+ * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
+ *
+ * @constructor Create a new controller
+ *
+ * <p>Provided a document (optionally) create a new document controller.  If no
+ * document is provided for context, a browser context will be assumed and
+ * window.document will be used.</p>
+ *
+ * @param document The document to control events for, may be null.
+ */
 function Controller (document) {
     if (typeof document == "undefined") document = window.document
 
@@ -139,6 +158,16 @@ function ReplaceMutator (controller) {
     }
 }
 
+/**
+ * An XPath selector.
+ *
+ * <p>Relies on there being element and document level <code>selectNodes</code>
+ * and <code>selectSingleNode</code> methods as provided by Internet Explorer
+ * and Sarissa.</p>
+ *
+ * @constructor Create a new XPath based Locator.
+ * @param expression The xpath expression.
+ */
 function XPathLocator (expression) {
     this.locate = function (context) {
         if (context == null || typeof context == "undefined") {
@@ -159,11 +188,12 @@ function XPathLocator (expression) {
 
 function FastIdLocator (id) {
     this.locate = function (context) {
+        var element = document.getElementById(id)
+
         if (context == null || typeof context == "undefined") {
-            context = document.documentElement
+            return element
         }
 
-        var element = document.getElementById(id)
 
         for (var cursor = element; cursor != null; cursor = cursor.parentNode)
         {
@@ -187,6 +217,36 @@ function NoopObserver () {
     this.error  = function () {}
 }
 
+/**
+ * A listable observer.
+ */
+function ListableObserver (observers) {
+    if (typeof observers == "undefined") observers = []
+
+    /**
+     * Notify all observers of the input.
+     *
+     * <p>Given an input object, pass it along to all observers in the
+     * list.</p>
+     *
+     * @param input The input object to pass along.
+     */
+    this.notify = function (input) {
+        observers.each(function (observer) {
+            observer.notify(input)
+        })
+    }
+
+    /**
+     * Notify all encapsulated observers of the exception.
+     */
+    this.error = function (exception) {
+        observers.each(function (observer) {
+            observer.error(exception)
+        })
+    }
+}
+
 function TransformObserver (transformers, locator, mutator) {
     this.next   = null
 
@@ -201,10 +261,11 @@ function TransformObserver (transformers, locator, mutator) {
         var element      = locator.locate()
 
         if (element == null) {
-            
+            /* TODO THROW EXCEPTION */
         }
-
-        mutator.apply(element, modification)
+        else {
+            mutator.apply(element, modification)
+        }
     }
 
     this.transform = function (input) {

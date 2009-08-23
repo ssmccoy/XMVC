@@ -2,7 +2,52 @@
 function DocumentScope (document) {
     this.root = new xmvc.ControllerScope()
 
+    var active = null
+
     document.documentElement.scope = this.root
+
+    /**
+     * Select the scope for the supplied element.
+     *
+     * <p>Makes the scope for the supplied element the active scope.  If no
+     * scope is present, all parents are descended until a scope is located and
+     * the scope chain is vivified for the given element.</p>
+     */
+    this.select = function (element) {
+        active = this.forNode(element)
+
+        if (active == null) {
+            active = this.vivify(element)
+        }
+    }
+
+    /**
+     * Fetch the value of the current object in the scope for the active
+     * element.
+     *
+     * <p>Starting at whichever element was most recently selected with {@link
+     * select(element)}, starts descending upward the scope chain looking for a
+     * value associated with the given id.  If one is found one is returned,
+     * otherwise an object is created by the given factory and placed in the
+     * active scope.  In all cases, and object is returned.</p>
+     *
+     * @param id The id of the object to locate.
+     * @param factory The object factory to use to create an object if
+     * necessary.
+     *
+     * @return The intended object.
+     */
+    this.get = function (id, factory) {
+        var value = active.valueOf(id)
+
+        if (typeof value == "undefined") {
+            value = factory.getObject()
+
+            active.set(id, value)
+        }
+
+        return value
+    }
 
     /**
      * Vivify scope for a given element of a document.

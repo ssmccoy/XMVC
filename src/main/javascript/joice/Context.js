@@ -241,6 +241,14 @@ function Context () {
         }
     }
 
+    /**
+     * Load an object by its label.
+     *
+     * <p>Resolves a label to an object specification and instatiates it.
+     * Returns the constructed object.</p>
+     *
+     * @param name The label for the object.
+     */
     this.load = function (name) {
         return this.getObject(labels[name])
     }

@@ -5,31 +5,38 @@
 
   <xsd:annotation>
     <xsd:documentation>
-      <controller xmlns="http://www.blisted.org/ns/xmvc/">
+      <!-- The DI configuration -->
+      <context xmlns="http://www.blisted.org/ns/joice/">
         <script type="text/javascript" src="foo.js"/>
         <script type="text/javascript" src="bar.js"/>
         <script type="text/javascript" src="baz.js"/>
 
-        <!-- The DI configuration -->
-        <context xmlns="http://www.blisted.org/ns/joice/">
-          <properties src="foo.properties"/>
+        <properties src="foo.properties"/>
 
-          <object id="bar" class="Bar"/>
+        <object id="bar" class="Bar"/>
 
-          <!-- XMVC Adds a "document" scope which keeps a relative chain of
-          scopes attached to each element.  When the element is detached from
-          the tree, the scope is detached.  This allows one to attach objects
-          at a given level and assume that any updates to elements within that
-          part of the DOM tree within the scope of the first reference are
-          always acting on that object. -->
-          <object id="foo" class="Foo" scope="document">
-            <argument object="bar"/>
-          </object>
-        </context>
+        <!-- XMVC Adds a "document" scope which keeps a relative chain of
+        scopes attached to each element.  When the element is detached from
+        the tree, the scope is detached.  This allows one to attach objects
+        at a given level and assume that any updates to elements within that
+        part of the DOM tree within the scope of the first reference are
+        always acting on that object. -->
+        <object id="foo" class="Foo" scope="document">
+          <argument object="bar"/>
+        </object>
+      </context>
 
+      <controller xmlns="http://www.blisted.org/ns/xmvc/">
         <!-- When someone clicks on a node with the id of foo -->
         <node id="foo">
           <action type="click" object="foo" handler="bar">
+            <!-- Example non-standard locator and non-standard transformer.
+            The transformer type "object" looks up an object in the joice
+            context, and calls "transform" on it.  This example uses jquery for
+            the locator.  The path becomes a jquery query. -->
+            <transform locator="jquery" path="p.neat"
+                       type="object" src="foo" behavior="append"/>
+
             <!-- add a new foo to the foo-list -->
             <transform path="//[@id=foo-list]" src="add-foo.xsl"
             behavior="append"/>
@@ -57,6 +64,10 @@
               <param name="format" value="Added a new foo: {foo#name}"/>
             </transform>
           </action>
+        </node>
+
+        <node locator="jquery" path="div > p.foo">
+          <action type="click" object="foo" handler="bar"/>
         </node>
       </controller>
     </xsd:documentation>
