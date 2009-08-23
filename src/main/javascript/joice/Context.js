@@ -113,17 +113,23 @@ function GeneratedConstructor (methodName, argumentCount) {
 
     var code = "return new \f(\f)".format(methodName, params.join(","))
 
-    var ctor = new Function(code)
+    try {
+        var ctor = new Function(code)
+    }
+    catch (error) {
+        throw new ConfigurationError("Unable to generate constructor: " + 
+                methodName + ": " + error.message)
+    }
 
     this.newInstance = function (params) {
-        try {
+//      try {
             return ctor.apply(this, params)
-        }
-        catch (error) {
-            window.alert(error.message)
-            throw new ContextError("Unable to initialize \f: \f".format(
-                methodName, error.message))
-        }
+//      }
+//      catch (error) {
+//          window.alert(error.message)
+//          throw new ContextError("Unable to initialize \f: \f".format(
+//              methodName, error.message))
+//      }
     }
 }
 

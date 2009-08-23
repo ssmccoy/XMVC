@@ -14,7 +14,7 @@
  * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
  */
 function DocumentScope (document) {
-    this.root   = new xmvc.ControllerScope()
+    this.root   = new ControllerScope()
     this.active = null
     this.live   = false
 
@@ -168,7 +168,7 @@ function DocumentScope (document) {
             var cursor = nodeStack[i]
 
             /* I *really* do mean this */
-            cursor.scope = scope = new xmvc.ControllerScope(scope)
+            cursor.scope = scope = new ControllerScope(scope)
         }
 
         return scope
@@ -180,7 +180,7 @@ function DocumentScope (document) {
      * <p>Given a node which belongs to the document this scope is attached to,
      * returns the scope associated with that node, if any.</p>
      *
-     * @return {xmvc.ControllerScope} The scope associated with this node, may
+     * @return {ControllerScope} The scope associated with this node, may
      * be null.
      * @throws DocumentScopeError If the supplied object is not a node of
      * this document.
@@ -222,7 +222,7 @@ function DocumentScope (document) {
  *
  * @author <a href="tag@cpan.org">Scott S. McCoy</a>
  */
-xmvc.ControllerScope = function xmvc_ControllerScope (parent) {
+function ControllerScope (parent) {
     var table = {}
 
     /**
@@ -231,7 +231,7 @@ xmvc.ControllerScope = function xmvc_ControllerScope (parent) {
      * a given key.  When the scope is located, a reference to it is returned.
      * </p>
      *
-     * @return {xmvc.ControllerScope} owner if found.
+     * @return {ControllerScope} owner if found.
      * @return undefined when unavailable.
      */
     this.contains = function (key) {
@@ -301,7 +301,7 @@ xmvc.ControllerScope = function xmvc_ControllerScope (parent) {
 
     /**
      * Return a reference to the parent scope.
-     * @return {xmvc.ControllerScope} parent scope.
+     * @return {ControllerScope} parent scope.
      * @return undefined if this is the top level scope.
      */
     this.parent = function () { return parent }

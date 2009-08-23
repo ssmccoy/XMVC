@@ -40,8 +40,17 @@ list.onclick = function () {
 }
 
 function Greeter () {
-    this.hello = function (event, observer) {
-        var fragment = document.createElement()
-        observer.notify()
+    this.hello = function (observer, ctx) {
+        var fragment = document.createElement("nothing")
+        observer.notify(fragment)
+    }
+
+    this.goodbye = function (observer, ctx) {
+        /* Traverse up to the dialog root node, and remove it:
+         * TODO A way to remove children from the controller xml.
+         */
+        var dialog = ctx.element.parentNode
+
+        dialog.parentNode.removeChild(dialog)
     }
 }

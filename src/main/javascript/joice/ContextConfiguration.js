@@ -125,7 +125,8 @@ ContextConfigurationError.prototype = new Error()
 function XMLContextConfiguration (context, semaphore) {
     var specs       = {}
     var loaders     = {
-        "text/javascript": new HttpJavaScriptLoader(semaphore) 
+        "text/javascript": new HttpJavaScriptLoader(semaphore),
+        "text/javascript;debug": new JITLoader(semaphore)
     }
 
     /**

@@ -18,8 +18,12 @@
  *
  * @param document The document to control events for, may be null.
  */
+var globalDocument = document
+
 function Controller (document) {
-    if (typeof document == "undefined") document = window.document
+    if (typeof document == "undefined") document = globalDocument
+
+    window.alert(document)
 
     var documentScope = new DocumentScope(document)
     var selections    = []
