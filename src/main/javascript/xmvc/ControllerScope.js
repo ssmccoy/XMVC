@@ -1,8 +1,22 @@
 
+/**
+ * @class Lazily vivified scope which matches lexical document area.
+ *
+ * <p>Creates a "scope" which can hold name value pairs relative to a given
+ * lexical area of a document.  The <em>active</em> lexical area must be
+ * selected using the {@link select(element)} method.  Once an area is
+ * selected, {@link get(id, factory)} can be called to fetch objects from
+ * it.</p>
+ *
+ * <p>This object implements the Scope API from the Joice Dependency Injection
+ * Container.</p>
+ *
+ * @author <a href="mailto:tag@cpan.org">Scott S. McCoy</a>
+ */
 function DocumentScope (document) {
-    this.root = new xmvc.ControllerScope()
-
-    var active = null
+    this.root   = new xmvc.ControllerScope()
+    this.active = null
+    this.live   = false
 
     document.documentElement.scope = this.root
 
@@ -12,13 +26,23 @@ function DocumentScope (document) {
      * <p>Makes the scope for the supplied element the active scope.  If no
      * scope is present, all parents are descended until a scope is located and
      * the scope chain is vivified for the given element.</p>
+     *
+     * @return true if the element had a scope, false if it had to locate a
+     * parent scope.
+     *
+     * @throws DocumentScopeError if the element is not a child of the document
+     * this scope is intended for.
      */
     this.select = function (element) {
-        active = this.forNode(element)
+        this.active = this.forNode(element)
 
-        if (active == null) {
-            active = this.vivify(element)
+        this.live = this.active != null
+
+        if (!this.live) {
+            this.active = this.findParent(element)
         }
+
+        return this.live
     }
 
     /**
@@ -38,15 +62,38 @@ function DocumentScope (document) {
      * @return The intended object.
      */
     this.get = function (id, factory) {
-        var value = active.valueOf(id)
+        var value = this.active.valueOf(id)
 
         if (typeof value == "undefined") {
+            if (!this.live) {
+                this.active = this.vivify(element)
+                this.live   = true
+            }
+            
             value = factory.getObject()
 
-            active.set(id, value)
+            this.active.set(id, value)
         }
 
         return value
+    }
+
+    /**
+     * Find the nearest parent scope.
+     *
+     * <p>Descends all parent nodes until a scope is found, and returns the
+     * scope found.</p>
+     *
+     * @return {DocumentScope} A scope if one is found, otherwise null.
+     */
+    this.findParent = function DocumentScope_findParent (element) {
+        for (var node = element; node != null; node = node.parentNode) {
+            if (node.scope) {
+                return scope
+            }
+        }
+
+        return null
     }
 
     /**
@@ -58,9 +105,9 @@ function DocumentScope (document) {
      * already, no new scopes are created.</p>
      *
      * @return The scope for the supplied element.
-     * @throws DocumentScopeException If the supplied element does not belong
+     * @throws DocumentScopeError If the supplied element does not belong
      * to the document this document scope is attached to.
-     * @throws DocumentScopeException If the supplied element is not actually
+     * @throws DocumentScopeError If the supplied element is not actually
      * <b>attached</b> to the document.
      */
     /* TODO There is some way to optimize this
@@ -85,7 +132,7 @@ function DocumentScope (document) {
      */
     this.vivify = function DocumentScope_vivify (element) {
         if (element.ownerDocument != document) {
-            throw new DocumentScopeException(
+            throw new DocumentScopeError(
                 "Attempt to vifify scope for element {" + 
                 element.namespaceURI + "}#" + element.localName + 
                 " failed!  Element is not a part of this scope's document"
@@ -109,7 +156,7 @@ function DocumentScope (document) {
         }
 
         if (lastNode == null) {
-            throw new DocumentScopeException(
+            throw new DocumentScopeError(
                 "Unable to find a node in the parent tree which has scope " +
                 "attached.  Has this element been added to the document?"
                 )
@@ -135,12 +182,12 @@ function DocumentScope (document) {
      *
      * @return {xmvc.ControllerScope} The scope associated with this node, may
      * be null.
-     * @throws DocumentScopeException If the supplied object is not a node of
+     * @throws DocumentScopeError If the supplied object is not a node of
      * this document.
      */
     this.forNode = function DocumentScope_forNode (node) {
         if (element.ownerDocument != document) {
-            throw new DocumentScopeException(
+            throw new DocumentScopeError(
                 "Attempt to vifify scope for element {" + 
                 element.namespaceURI + "}#" + element.localName + 
                 " failed!  Element is not a part of this scope's document"

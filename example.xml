@@ -25,4 +25,25 @@
   <object id="foo" constructor="Foo">
     <argument object="bar"/>
   </object>
+
+  <object constructor="XMLController" initialization="eager">
+    <argument>
+      <xml>
+        <controller>
+          <node id="ping">
+            <action type="click" object="greeter" handler="hello">
+              <transformer type="xslt" path="//body" behavior="append"
+                  src="example.xsl">
+                <param name="message" value="Hello, world"/>
+              </transformer>
+            </action>
+          </node>
+
+          <node path="//div[contains(@class, 'dialog')/input[@type = 'submit']">
+            <action type="click" object="greeter" handler="goodbye"/>
+          </node>
+        </controller>
+      </xml>
+    </argument>
+  </object>
 </context>

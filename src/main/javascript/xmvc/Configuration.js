@@ -1,35 +1,10 @@
 
-function XMVCConfigParser () {
-    var nodeRules = [
-        { included: [ "id" ],
-          excluded: [ "context", "type", "path" ] },
-        { included: [ "type", "path" ],
-          excluded: [ "id", "context" ] },
-        { included: [ "context" ],
-          excluded: [ "id", "type", "path" ] },
-    ]
-
-    this.validateAttributes = function (node, rules) {
-        var valid = true
-
-        rules.each(function (rule) {
-            rule.included.each(function (included) {
-                if (valid) valid = node.hasAttribute(included)
-            })
-
-            rule.excluded.each(function (excluded) {
-                if (valid) valid = !node.hasAttribute(excluded)
-            })
-        })
-
-        return valid
-    }
-
+function XMVCConfigParser (controller) {
     this._buildTransformer = function (transform) {
         var source   = transform.getAttribute("src")
         var type     = transform.getAttribute("type")
 
-        var transformer = controller.createTransformer(type, source)
+        var transformer = controller.getTransformer(type, source)
     }
 
     this._nextTransformNode = function (transform) {
@@ -140,12 +115,12 @@ function XMVCConfigParser () {
         {
             if (node.type == Node.ELEMENT_NODE) {
                 if (node.localName == "node") {
-                    if (this.validateAttributes(node, nodeRules)) {
-                        selections.push(this._buildSelection(node))
-                    }
+                    selections.push(this._buildSelection(node))
                 }
             }
         }
+
+        return selections
     }
 
     this.parse = function (element) {

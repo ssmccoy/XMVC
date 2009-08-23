@@ -38,3 +38,10 @@ list.onclick = function () {
     var baz = context.load("baz")
     baz.print()
 }
+
+function Greeter () {
+    this.hello = function (event, observer) {
+        var fragment = document.createElement()
+        observer.notify()
+    }
+}
