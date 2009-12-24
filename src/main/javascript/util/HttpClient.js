@@ -10,8 +10,9 @@
  */
 function HttpRequest (url) {
     var request             = new XMLHttpRequest()
-    /* TODO: Remove this */
+    /* TODO: Remove this, not supported by IE & not really working anyway...
     request.overrideMimeType("text/plain")
+*/
 
     this.callback           = function () { }
     this.errorback          = function () { }

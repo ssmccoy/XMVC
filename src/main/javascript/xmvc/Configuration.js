@@ -11,7 +11,7 @@ function XMVCConfigParser (controller) {
         for (var node = transform.firstChild;
                  node != null;
                  node = node.nextSibling) {
-            if (node.localName == "transform") {
+            if (node.tagName == "transform") {
                 return node
             }
         }
@@ -59,15 +59,19 @@ function XMVCConfigParser (controller) {
         var locateType = null
         var locatePath = null 
 
+        /* TODO: I think this is all out of date... */
         if (node.hasAttribute("id")) {
+            window.alert("ID node")
             locateType = "id"
             locatePath = node.getAttribute("id")
         }
-        if (node.hasAttribute("context")) {
+        else if (node.hasAttribute("context")) {
+            window.alert("context node")
             locateType = "xpath"
             locatePath = node.getAttribute("context")
         }
-        if (node.hasAttribute("type")) {
+        else if (node.hasAttribute("type")) {
+            window.alert("type node")
             locateType = node.getAttribute("locator")
             locatePath = node.getAttribute("path")
         }
@@ -83,7 +87,7 @@ function XMVCConfigParser (controller) {
                  child != null;
                  child = child.nextSibling)
         {
-            if (child.localName == "action") {
+            if (child.tagName == "action") {
                 /* TODO: Support multiple transform observers through the
                  * listable transform interface. */
                 var transform = this._nextTransformNode(child)
@@ -114,7 +118,7 @@ function XMVCConfigParser (controller) {
              node = node.nextSibling)
         {
             if (node.type == Node.ELEMENT_NODE) {
-                if (node.localName == "node") {
+                if (node.tagName == "node") {
                     selections.push(this._buildSelection(node))
                 }
             }

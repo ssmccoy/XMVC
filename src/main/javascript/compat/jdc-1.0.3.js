@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 // ***************************************************************************
-// File created 2008-10-10 17:19:36
+// File created 2008-10-09 14:50:22
 
 // JDC Version: 1.0.3
 // EPE revision: 92
@@ -53,8 +53,8 @@ if (document.createEventObject) {
   // a number of situations especially when using innerHTML
   // 1 = on, 0 = off. Default value is 1
   // See http://www.jslab.dk/epe.features.php#enable.cache for more info
-  EPE.CACHE_ELEMENTS = 0;
-
+  EPE.CACHE_ELEMENTS = 1;
+  
   // THERE ARE NO CONFIGURABLE SETTINGS BELOW THIS LINE
 
   /***********************************************
@@ -64,14 +64,14 @@ if (document.createEventObject) {
   *
   *
   ***********************************************/
-
+  
   // Save native createElement method
   EPE.IECreateElement = document.createElement;
-
+  
   /**
   * Creates an element of the type specified by tag.  The element is wrapped
   * within an instance of a subclass of HTMLElement.
-  *
+  * 
   * @param tag {String} The HTML tag name of the element type to create.
   * @returns a native element wrapped in an instance of HTMLElement.
   * @type HTMLElement
@@ -87,21 +87,21 @@ if (document.createEventObject) {
         EPE.cache.add(elm);
       return elm;
     };
-
+  
   // This assignment *must* come after the EPE.createElement declaration
   document.createElement = EPE.createElement;
 
   /**
    * Copy all methods and properties from real prototype to a given element's
    * pseudo-prototype.
-   *
+   * 
    * This method is called when application code invokes the init method,
    * when a new node is attached to the document in innerHTML, and from
    * document createElement.
-   *
+   * 
    * An element can only be extended once.  This method does nothing if the
    * given element has it's constructor property set.
-   *
+   * 
    * @param elm  Element.
    * @param oCon Constructor.
    */
@@ -109,7 +109,7 @@ if (document.createEventObject) {
     function(elm,oCon) {
       // If elm has a 'constructor' property is has already been extended.
       // Elements may *not* be extended twice as this will cause unpredictable
-      // results for some workarounds. Calling EPE.extend twice could happen when
+      // results for some workarounds. Calling EPE.extend twice could happen when 
       // an element appends childs using innerHTML. The childs which are
       // there prior to the innerHTML change will already have been extended.
       if (!elm.constructor) {
@@ -184,10 +184,10 @@ if (document.createEventObject) {
       }
       return elm;
     };
-
+  
   /**
   * Custom toString method of all element constructors
-  *
+  * 
   * @returns the name of an element constructor formatted as in Firefox.
   * @type String
   */
@@ -196,15 +196,15 @@ if (document.createEventObject) {
       var s = Function.prototype.toString.apply(this);
       return s.match(/^function\s(\w+)/)[1];
     };
-
+  
   /**
    * Extend existing elements onload.  This code *must* be attached as a load
    * event handler by application code to get called when the document finishes
-   * loading.
+   * loading. 
    * This handler will optionally call a load handler as a callback
    * function if the application code requires a load event handler attached
    * to the body element.
-   * See http://www.jslab.dk/epe.installation.php for more information
+   * See http://www.jslab.dk/epe.installation.php for more information   
    */
   EPE.init =
     function() {
@@ -223,14 +223,14 @@ if (document.createEventObject) {
       if (EPE.__R1)
         EPE.__R1();
     };
-
+  
   /**
    * Storage for functions which should be executed after EPE has
    * initialized but before control is given back to the user
-   * script.
+   * script.      
    */
   EPE.init.aux = [];
-
+  
   /***********************************************
   *
   *
@@ -242,45 +242,45 @@ if (document.createEventObject) {
   /**
    * Central point for enabling property watching.  This function may be
    * called from outside EPE.
-   *
+   * 
    * Enabling property watching is accomplished by attaching EPE.checkInnerHTML
    * as a property change handler.  One side effect is that application code
    * registered change listeners may be called.
-   *
+   * 
    * @param elm An element for which property watching will be enabled.
    */
   EPE.enableWatch =
     function(elm) {
       elm.attachEvent('onpropertychange',EPE.checkInnerHTML);
     };
-
+  
   /**
    * Central point for disabling property watching.  This function may be
    * called from outside EPE.
-   *
+   * 
    * Disabling property watching is accomplished by detaching EPE.checkInnerHTML
    * as a property change handler.  One side effect is that application code
    * registered change listeners will no longer be called.
-   *
+   * 
    * @param elm An element for which property watching will be disabled.
    */
   EPE.disableWatch =
     function(elm) {
       elm.detachEvent('onpropertychange',EPE.checkInnerHTML);
     };
-
+  
   /**
    * Watch handler for changes to a node which originate from altering innerHTML
    * or from property changes.  When this function executes the changes have
    * already been made and attached to the document.
-   *
+   * 
    * Note: onpropertychange fires on the document object even though no pseudo
-   *       (epe tag) contructor is attached to the document.
-   *
+   *       (epe tag) contructor is attached to the document.   
+   *    
    * Weird IE behavior: When assigning event handlers using attachEvent 'this' references the window object
-   *                    so we use event.srcElement instead.
+   *                    so we use event.srcElement instead.       
   */
-
+  
   EPE.checkInnerHTML =
     function() {
       // If source of event is document or window then no event.srcElement exist
@@ -306,10 +306,10 @@ if (document.createEventObject) {
           EPE.PlugIn.executeChange(document,event);
       }
     };
-
+  
   /**
    * Recursively extend all nodes added by an innerHTML change.
-   *
+   * 
    * @param node The base HTML node for a depth-first recursion step.
    */
   EPE.extendInnerHTML =
@@ -338,7 +338,7 @@ if (document.createEventObject) {
         }
       }
     };
-
+   
   /***********************************************
   *
   *
@@ -349,10 +349,10 @@ if (document.createEventObject) {
 
   // If caching is turned on
   if (EPE.CACHE_ELEMENTS) {
-
+    
     EPE.cache = EPE.IECreateElement('epe');
     document.documentElement.childNodes[0].appendChild(EPE.cache);
-
+    
     EPE.cache.add =
       function(elm) {
         if (elm.canHaveChildren) {
@@ -360,7 +360,7 @@ if (document.createEventObject) {
           elm.cached = true;
         }
       };
-
+    
     EPE.cache.remove =
       function(elm) {
         elm.cached = null;
@@ -368,7 +368,7 @@ if (document.createEventObject) {
           for(var i=0; i<elm.childNodes.length; i++)
             if (elm.childNodes[i].cached)
               EPE.cache.remove(elm.childNodes[i]);
-        }
+        } 
         EPE.cache.removeChild(elm);
       };
   }
@@ -381,31 +381,31 @@ if (document.createEventObject) {
   *
   *
   ***********************************************/
-
+  
   /**
    * Create a new EPE.PlugIn object.
-   *
+   * 
    * @param t The element tag which this plugin is for. If not
-   * provided then all elements are assumed.
+   * provided then all elements are assumed.      
    */
   EPE.PlugIn = function(t) {
       this.con = t ? EPE.tags[t.toLowerCase()] : HTMLElement;
       if(!this.con)
         throw new Error('EPE.PlugIn: No constructor for tag found.');
     };
-
+  
   // Storage for external functions which are executed when
   // an element is created
   EPE.PlugIn.create = {};
-
+  
   // Storage for external functions which are executed when
   // a property of an element is changed
   EPE.PlugIn.change = {};
-
+  
   // Storage for external functions which are executed when
   // an alement is attached to the document
   EPE.PlugIn.attach = {};
-
+  
   /**
    * Add a create or change listener.  These listeners are called from EPE.extend which
    * is called when application code invokes the init method,
@@ -413,7 +413,7 @@ if (document.createEventObject) {
    * document createElement.
    *
    * The event module UEM registers create listeners.
-   *
+   * 
    * @param t The type of listener. Either create or change
    * @param f The event function.
    */
@@ -435,10 +435,10 @@ if (document.createEventObject) {
         EPE.PlugIn[t][con].push(f);
       }
     };
-
+    
     /**
      * Remove a create or change listener.
-     *
+     * 
      * @param t The type of listener. Either create or change
      * @param f The event function.
      */
@@ -454,11 +454,11 @@ if (document.createEventObject) {
         for(var i=0; i<l; i++)
           EPE.PlugIn[t][con][i] == f ? n++ : EPE.PlugIn[t][con][i-n] = EPE.PlugIn[t][con][i];
         EPE.PlugIn[t][con].length = EPE.PlugIn[t][con].length - n;
-        // If no functions are registered for constructor remove array
+        // If no functions are registered for constructor remove array 
         if (!EPE.PlugIn[t][con].length)
           delete EPE.PlugIn[t][con];
       };
-
+  
   // Execute create listeners
   EPE.PlugIn.executeCreate =
     function(elm) {
@@ -507,7 +507,7 @@ if (document.createEventObject) {
         }
       }
     };
-
+  
   // Execute change listeners
   EPE.PlugIn.executeChange =
     function(elm,e) {
@@ -528,7 +528,7 @@ if (document.createEventObject) {
       // Re-enable property watching
       EPE.enableWatch(elm);
     };
-
+  
   // Execute attach listeners
   EPE.PlugIn.executeAttach =
     function(elm) {
@@ -548,7 +548,7 @@ if (document.createEventObject) {
       // Re-enable property watching
       EPE.enableWatch(elm);
     };
-
+  
   /***********************************************
   *
   *
@@ -560,7 +560,7 @@ if (document.createEventObject) {
   /**
    * Replacement for the native appendChild method. Appends a child element
    * and arranges for the node and it's children to be prototype extended.
-   *
+   * 
    * @param elm The node to append as the last of this element's children.
    */
   EPE.appendChild =
@@ -571,14 +571,14 @@ if (document.createEventObject) {
         EPE.cache.remove(elm);
       return this._appendChild(elm);
     };
-
+  
   /**
    * Replacement for the native insertBefore method. Inserts a child element
    * and arranges for the node and it's children to be prototype extended.
-   *
+   * 
    * @param newChild The node to insert.
    * @param refChild The child node that will be the nextChild after
-   *     the insertion.
+   *     the insertion. 
    */
   EPE.insertBefore =
     function(newChild, refChild) {
@@ -587,11 +587,11 @@ if (document.createEventObject) {
         EPE.cache.remove(newChild);
       return this._insertBefore(newChild, refChild);
     };
-
+  
   /**
    * Replacement for the native replaceChild method. Replaces a child element
    * and arranges for the node and it's children to be prototype extended.
-   *
+   * 
    * @param newChild The node to insert.
    * @param refChild The child node that will be replaced after the insertion
    *     is complete.
@@ -603,12 +603,12 @@ if (document.createEventObject) {
         EPE.cache.remove(newChild);
       return this._replaceChild(newChild, oldChild);
     };
-
+  
   /**
    * Replacement for the native insertRow method for tables and tablesections.
-   * Creates a row, inserts it into the table or table section
+   * Creates a row, inserts it into the table or table section   
    * and arranges for the node and it's children to be prototype extended.
-   *
+   * 
    * @param i Index where the row should be inserted.
    */
   EPE.insertRow =
@@ -616,12 +616,12 @@ if (document.createEventObject) {
       var tr = this._insertRow(i);
       return tr ? EPE.extend(tr) : null;
     };
-
+  
   /**
    * Replacement for the native insertCell method for table rows.
-   * Creates a cell, inserts it into the table row
+   * Creates a cell, inserts it into the table row   
    * and extends the cell.
-   *
+   * 
    * @param i Index of the cell.
    */
   EPE.insertCell =
@@ -629,50 +629,50 @@ if (document.createEventObject) {
       var td = this._insertCell(i);
       return td ? EPE.extend(td) : null;
     };
-
+  
   /**
    * Replacement for the native createCaption method for tables.
-   * Creates a caption, inserts it into the table
+   * Creates a caption, inserts it into the table    
    * and extends the caption.
-   *
+   * 
    */
   EPE.createCaption =
     function() {
       var cap = this._createCaption();
       return cap ? EPE.extend(cap) : null;
     };
-
+  
   /**
    * Replacement for the native createTHead method for tables.
-   * Creates a table header section, inserts it into the table
+   * Creates a table header section, inserts it into the table   
    * and extends the tablesection.
-   *
+   * 
    */
   EPE.createTHead =
     function() {
       var th = this._createTHead();
       return th ? EPE.extend(th) : null;
     };
-
+  
   /**
    * Replacement for the native createTFoot method for tables.
-   * Creates a table footer section, inserts it into the table
+   * Creates a table footer section, inserts it into the table   
    * and extends the tablesection.
-   *
+   * 
    */
   EPE.createTFoot =
     function() {
       var tf = this._createTFoot();
       return tf ? EPE.extend(tf) : null;
     };
-
+  
   // If HTMLCollections are anabel by the user
   if (EPE.ENABLE_HTMLCOLLECTIONS) {
     /**
      * Replacement for the native getElementsByTagName method.
-     * Creates a proper HTMLCollection which can be extended
+     * Creates a proper HTMLCollection which can be extended   
      * by prototyping on HTMLCollection.prototype
-     *
+     * 
      * @param t The tag name.
      */
     EPE.getElementsByTagName =
@@ -681,7 +681,7 @@ if (document.createEventObject) {
         return c;
       };
   }
-
+   
   /***********************************************
   *
   *
@@ -697,9 +697,9 @@ if (document.createEventObject) {
   * in reality only changing the pseudo-prototype.  There is only one instance
   * of this pseudo-prototype.  This singleton is a target of propertychange
   * events when application code attempts to alter an HTML prototype.
-  *
+  * 
   * This is the first function to be called when EPE is loaded.
-  *
+  * 
   * @param oCon A reference to the constructor.  This is either HTMLElement
   *             itself or a subclass of HTMLElement.
   */
@@ -728,18 +728,18 @@ if (document.createEventObject) {
       // Listen for changes to the pseudo prototype
       oCon.prototype.attachEvent('onpropertychange',EPE.updatePrototype);
   };
-
+  
   /**
    * Called whenever our expando tag changes properties.  When a change
    * to the prototype is attempted in application code, the change is really
    * made to a pseudo-prototype.
-   *
+   * 
    * If the change is for an HTMLElement, the same change is made to the real
    * and pseudo prototypes of the subclasses of HTMLElement.  Then the change
    * is propagated to all elements in the DOM hierarchy.  If caching is enabled
    * by the application code, the same change is propagated to all cached
    * elements.
-   *
+   * 
    * If the change is for a proper subclass of HTMLElement, then
    * the corresponding change is propagated to the real prototype.  Then the
    * change is propagated to all elements in the DOM hierarchy that have a
@@ -787,7 +787,7 @@ if (document.createEventObject) {
           EPE.updateElements(a[i],p,src[p]);
       }
     };
-
+  
    /**
    *  Update all elements setting element.  First, all elements that are
    *  already in the DOM hierarchy of the current document are updated
@@ -796,7 +796,7 @@ if (document.createEventObject) {
    *  has enabled element caching, elements that have been stored in the
    *  cache and that have not yet been attached to the DOM hierarchy are
    *  updated.
-   *
+   *  
    *  @param p Property name.
    *  @param v Property value.
    */
@@ -815,17 +815,17 @@ if (document.createEventObject) {
         }
       }
     };
-
+  
   /**
   * Update all elements with a given tagname.  The elements are altered by
   * setting the value of a given property.
-  *
+  * 
   * The update is done in two steps.  First, all instances of the tag that
   * are in the DOM hierarchy of the current document are updated.  Then, if
   * the application code has enabled element caching, elements that have been
   * stored in the cache and that have not yet been attached to the DOM
   * hierarchy are updated.
-  *
+  * 
   * @param tag {String} An HTML tag name.
   * @param p {String}   The name of the property.
   * @param v The value of the property.
@@ -844,7 +844,7 @@ if (document.createEventObject) {
         EPE.enableWatch(elms[i]);
       }
     };
-
+   
   /***********************************************
   *
   *
@@ -922,7 +922,7 @@ if (document.createEventObject) {
     tr: HTMLTableRowElement,
     ul: HTMLUListElement
   };
-
+  
   // Create array of unique constructors
   EPE.uniqueTags = [];
   for(var p in EPE.tags)
@@ -948,12 +948,12 @@ if (document.createEventObject) {
 
   // HTMLDocument. Just a placeholder - not meant to be instantiated
   // @constructor
-
+  
   /*@cc_on
   function HTMLDocument() {}
   document.constructor = HTMLDocument;
   HTMLDocument.toString = EPE.constructorToString;
-
+  
   // HTMLElement.  The other elements inherit from this object.
   // @param t {String} A tag name.
   // @constructor
@@ -974,7 +974,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLAnchorElement.tags = ['a'];
-
+  
 
   //  APPLET tag.
   //  @constructor
@@ -984,7 +984,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLAppletElement.tags = ['applet'];
-
+  
   // AREA tag.
   // @constructor
   function HTMLAreaElement() {
@@ -993,7 +993,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLAreaElement.tags = ['area'];
-
+  
   // BASE tag.
   function HTMLBaseElement() {
     var elm = EPE.IECreateElement('base');
@@ -1001,7 +1001,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLBaseElement.tags = ['base'];
-
+  
   // BASEFONT tag.
   // @constructor
   function HTMLBaseFontElement() {
@@ -1010,7 +1010,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLBaseFontElement.tags = ['basefont'];
-
+  
   //  BODY tag.
   //  @constructor
   function HTMLBodyElement() {
@@ -1019,7 +1019,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLBodyElement.tags = ['body'];
-
+  
   // BR tag.
   // @constructor
   function HTMLBRElement() {
@@ -1028,7 +1028,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLBRElement.tags = ['br'];
-
+  
   // BUTTON tag.
   // @constructor
   function HTMLButtonElement() {
@@ -1037,7 +1037,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLButtonElement.tags = ['button'];
-
+  
   // CAPTION tag.
   // @constructor
   function HTMLTableCaptionElement() {
@@ -1046,7 +1046,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLTableCaptionElement.tags = ['caption'];
-
+  
   // COL, COLGROUP tag.
   // @constructor
   function HTMLTableColElement(tag) {
@@ -1055,7 +1055,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLTableColElement.tags = ['col','colgroup'];
-
+  
   // DIR tag.
   // @constructor
   function HTMLDirectoryElement() {
@@ -1064,7 +1064,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLDirectoryElement.tags = ['dir'];
-
+  
   // DIV tag.
   // @constructor
   function HTMLDivElement() {
@@ -1073,7 +1073,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLDivElement.tags = ['div'];
-
+  
   // DL tag.
   // @constructor
   function HTMLDListElement() {
@@ -1082,7 +1082,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLDListElement.tags = ['dl'];
-
+  
   // FIELDSET tag.
   // @constructor
   function HTMLFieldSetElement() {
@@ -1091,7 +1091,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLFieldSetElement.tags = ['fieldset'];
-
+  
   // FONT tag.
   // @constructor
   function HTMLFontElement() {
@@ -1100,7 +1100,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLFontElement.tags = ['font'];
-
+  
   // FORM tag.
   // @constructor
   function HTMLFormElement() {
@@ -1109,7 +1109,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLFormElement.tags = ['form'];
-
+  
 
   // FRAME tag.
   // @constructor
@@ -1119,7 +1119,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLFrameElement.tags = ['frame'];
-
+  
   // FRAMESET tag.
   // @constructor
   function HTMLFrameSetElement() {
@@ -1128,7 +1128,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLFrameSetElement.tags = ['framset'];
-
+  
   // H1, H2, H3, H4, H5, H6 tag.
   // @param t {String} A tag name.  One of 'h1', 'h2', 'h3', 'h4', 'h5', or 'h6'.
   // @constructor
@@ -1138,7 +1138,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLHeadingElement.tags = ['h1','h2','h3','h4','h5','h6'];
-
+  
   // HEAD tag.
   // @constructor
   function HTMLHeadElement() {
@@ -1147,7 +1147,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLHeadElement.tags = ['head'];
-
+  
   // HR tag.
   // @constructor
   function HTMLHRElement() {
@@ -1156,7 +1156,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLHRElement.tags = ['hr'];
-
+  
   // HTML tag.
   // @constructor
   function HTMLHtmlElement() {
@@ -1165,7 +1165,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLHtmlElement.tags = ['html'];
-
+  
   // IFRAME tag.
   // @constructor
   function HTMLIFrameElement() {
@@ -1174,7 +1174,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLIFrameElement.tags = ['iframe'];
-
+  
   // IMG tag.
   // @constructor
   function HTMLImageElement() {
@@ -1183,7 +1183,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLImageElement.tags = ['img'];
-
+  
   // INPUT tag.
   // @constructor
   function HTMLInputElement() {
@@ -1192,7 +1192,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLInputElement.tags = ['input'];
-
+  
   // DEL, INS tag.
   // @param t {String} A tag name.  One of 'del' or 'ins'.
   // @constructor
@@ -1202,7 +1202,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLModElement.tags = ['del','ins'];
-
+  
   // ISINDEX tag.
   // @constructor
   function HTMLIsIndexElement() {
@@ -1211,7 +1211,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLIsIndexElement.tags = ['isindex'];
-
+  
   // LABEL tag.
   // @constructor
   function HTMLLabelElement() {
@@ -1220,7 +1220,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLLabelElement.tags = ['label'];
-
+  
   // LEGEND tag.
   // @constructor
   function HTMLLegendElement() {
@@ -1229,7 +1229,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLLegendElement.tags = ['legend'];
-
+  
   // LI tag.
   // @constructor
   function HTMLLIElement() {
@@ -1238,7 +1238,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLLIElement.tags = ['li'];
-
+  
   // LINK tag.
   // @constructor
   function HTMLLinkElement() {
@@ -1247,7 +1247,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLLinkElement.tags = ['link'];
-
+  
   // MAP tag.
   // @constructor
   function HTMLMapElement() {
@@ -1256,7 +1256,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLMapElement.tags = ['map'];
-
+  
   // MENU tag.
   // @constructor
   function HTMLMenuElement() {
@@ -1265,7 +1265,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLMenuElement.tags = ['menu'];
-
+  
   // META tag.
   // @constructor
   function HTMLMetaElement() {
@@ -1274,7 +1274,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLMetaElement.tags = ['meta'];
-
+  
   // OBJECT tag.
   // @constructor
   function HTMLObjectElement() {
@@ -1283,7 +1283,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLObjectElement.tags = ['object'];
-
+  
   // OL tag.
   // @constructor
   function HTMLOListElement() {
@@ -1292,7 +1292,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLOListElement.tags = ['ol'];
-
+  
   // OPTGROUP tag.
   // @constructor
   function HTMLOptGroupElement() {
@@ -1301,7 +1301,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLOptGroupElement.tags = ['optgroup'];
-
+  
   // OPTION tag.
   // @constructor
   function HTMLOptionElement() {
@@ -1310,7 +1310,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLOptionElement.tags = ['option'];
-
+  
   // P tag.
   // @constructor
   function HTMLParagraphElement() {
@@ -1328,7 +1328,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLParamElement.tags = ['param'];
-
+  
   // PRE tag.
   // @constructor
   function HTMLPreElement() {
@@ -1337,7 +1337,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLPreElement.tags = ['pre'];
-
+  
   // Q tag.
   // @constructor
   function HTMLQuoteElement() {
@@ -1346,7 +1346,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLQuoteElement.tags = ['q'];
-
+  
   // SELECT tag.
   // @constructor
   function HTMLSelectElement() {
@@ -1355,7 +1355,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLSelectElement.tags = ['select'];
-
+  
   // SCRIPT tag.
   // @constructor
   function HTMLScriptElement() {
@@ -1364,7 +1364,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLScriptElement.tags = ['script'];
-
+  
   // EM, SPAN, STRONG tag.  This is not a W3C class.
   // @param t {String} A tag name.  One of 'em', 'span', or 'strong'.
   // @constructor
@@ -1374,7 +1374,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLSpanElement.tags = ['em','span','strike','strong'];
-
+  
   // STYLE tag.
   // @constructor
   function HTMLStyleElement() {
@@ -1383,7 +1383,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLStyleElement.tags = ['style'];
-
+  
   // TABLE tag.
   // @constructor
   function HTMLTableElement() {
@@ -1402,7 +1402,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLTableElement.tags = ['table'];
-
+ 
   // TBODY, TFOOT, THEAD tag.
   // @param t {String} A tag name.  One of 'tbody', 'tfoot', or 'thead'.
   // @constructor
@@ -1416,7 +1416,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLTableSectionElement.tags = ['tbody','tfoot','thead'];
-
+  
   // TD, TH tag.
   // @param t {String} A tag name.  One of 'tr' or 'th'.
   // @constructor
@@ -1426,7 +1426,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLTableCellElement.tags = ['td','th'];
-
+  
   // TEXTAREA tag.
   // @constructor
   function HTMLTextAreaElement() {
@@ -1435,7 +1435,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLTextAreaElement.tags = ['textarea'];
-
+  
   // TITLE tag.
   // @constructor
   function HTMLTitleElement() {
@@ -1444,7 +1444,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLTitleElement.tags = ['title'];
-
+  
   // TR tag.
   // @constructor
   function HTMLTableRowElement() {
@@ -1457,7 +1457,7 @@ if (document.createEventObject) {
     return elm;
   }
   HTMLTableRowElement.tags = ['tr'];
-
+  
   // UL tag.
   // @constructor
   function HTMLUListElement() {
@@ -1467,7 +1467,7 @@ if (document.createEventObject) {
   }
   HTMLUListElement.tags = ['ul'];
   @*/
-
+ 
   // Create pseudo prototype object on all HTML constructors
   EPE.initPrototype(HTMLElement);
   var a = EPE.uniqueTags;
@@ -1475,7 +1475,258 @@ if (document.createEventObject) {
   for(var i=0; i<l; i++)
     EPE.initPrototype(a[i]);
 }
-// [uem.ie.js]
+// [epe.ie.htmlelement.getattribute.js]
+
+// HTMLElement.getAttribute correction for IE
+// Note that the 'href' attribute is reported as
+// an absolute URL in IE6+7 IF the attribute is specified
+// whereas Mozilla aways reports the
+// actual attribute value. This is not nessesarily wrong
+// but impossible to work around as there are no means to
+// tell when a href value is relative or absolute. See W3C
+// specifications for more information
+// W3C Anchor href attribute: http://www.w3.org/TR/html4/struct/links.html#adef-href
+// W3C URI type definition: http://www.w3.org/TR/html4/types.html#type-uri
+if (document.createEventObject && window.EPE) {
+  // Define new EPE replacement function
+  HTMLElement.prototype.getAttribute =
+    function(a) {
+      a = a.toLowerCase();
+      // Style attribute is an object in IE6+7
+      // so we need to expand it to a string
+      if (a == 'style') {
+        var s = this.style.cssText.toLowerCase();
+        return s.charAt(s.length - 1) != ';' ? s + ';' : s;
+      }
+      return this.getAttributeNode(a).nodeValue;
+    };
+}
+// [epe.ie.htmlelement.hasattribute.js]
+
+// HTMLElement.hasAttribute
+// Implemented natively in IE 8 beta
+if (document.createEventObject && window.EPE) {
+  // Define new EPE replacement function
+  HTMLElement.prototype.hasAttribute =
+    function(a) {
+      // IE reads 'specified' property wrong for event handlers
+      if (/^on/.test(a))
+        return this[a] && this[a].constructor == Function ? true : false;
+      return this.getAttributeNode(a).specified;
+    };
+}
+// [epe.ie.htmlelement.hasattributes.js]
+
+// HTMLElement.hasAttributes for IE
+if (document.createEventObject && window.EPE) {
+  // Define new EPE replacement function
+  // If no non-expando attributes have specified = true then element has no attributes
+  HTMLElement.prototype.hasAttributes =
+    function() {
+      var a = this.attributes;
+      var l = a.length;
+      for (var i=0; i<l; i++) {
+        if (!a.item(i).expando && a.item(i).specified)
+          return true;
+      }
+      return false;
+    };
+}
+// [epe.ie.htmlelement.removeattribute.js]
+
+// HTMLElement.removeAttribute correction for IE
+// 'coords' attribute of A and AREA tags can not be removed
+// No known fix. Setting it explicitely to null doesn't work
+if (document.createEventObject && window.EPE) {
+  // Define new EPE replacement function
+  EPE.removeAttribute =
+    function(a) {
+      a = a.toLowerCase();
+      // Remove event handlers.
+      if (/^on/.test(a))
+        this[a] = null;
+      else
+        return this._removeAttribute(a);
+    };
+    // Define PlugIn for all elements
+  EPE.PlugIn.RemoveAttribute = new EPE.PlugIn();
+  EPE.PlugIn.RemoveAttribute.addEPEListener(
+    'create',
+    function() {
+      // Can't assign to element.removeAttribute when tag is OBJECT or APPLET
+      // No workaround.
+      if (!(this.constructor == HTMLObjectElement || this.constructor == HTMLAppletElement)) {
+        this._removeAttribute = this.removeAttribute;
+        this.removeAttribute = EPE.removeAttribute;
+      }
+    }
+  );
+}
+// [epe.ie.htmlelement.removeattributenode.js]
+
+// HTMLElement.removeAttributeNode correction for IE
+// Doesn't work on OBJECT tags as you can't assign to element.removeAttribute
+// nor element.removeAttributeNode
+// The function have to be created as a plugin otherwise EPE will auto assign
+// to OBJECT and APPLET when initializing prototype.
+if (document.createEventObject && window.EPE) {
+  // Define new EPE replacement function
+  EPE.removeAttributeNode =
+    function(n) {
+      return this.removeAttribute(n.nodeName);
+    };
+    // Define PlugIn for all elements
+  EPE.PlugIn.RemoveAttribute = new EPE.PlugIn();
+  EPE.PlugIn.RemoveAttribute.addEPEListener(
+    'create',
+    function() {
+      // Can't assign to element.removeAttribute when tag is OBJECT or APPLET
+      // No workaround.
+      if (!(this.constructor == HTMLObjectElement || this.constructor == HTMLAppletElement)) {
+        this._removeAttributeNode = this.removeAttributeNode;
+        this.removeAttributeNode = EPE.removeAttributeNode;
+      }
+    }
+  );
+}
+// [epe.ie.htmlelement.setattribute.js]
+
+// Override IE native setAttribute
+if (document.createEventObject && window.EPE) {
+  // Define new EPE replacement function
+  EPE.setAttribute =
+    function(a,v) {
+      a = a.toLowerCase();
+      if (a == 'style') {
+        // Fixes a lot of issues regarding comparison of style attributes
+        this.style.cssText = v;
+        /* Old code before I realized cssText was not read-only but read/write 
+        // Split string on ';'
+        var s = v.split(';');
+        var p = null;
+        var tmp = "setting style\n";
+        tmp += "before split: " + v + "\n";
+        for(var i=0; i<s.length; i++) {
+          tmp += "before split: " + s[i] + "\n";
+          // If style has trailing ; then s[s.length-1] = ''
+          if (s[i]) {
+            p = s[i].split(':');
+            // The style value must be trimmed as IE remembers redundant whitespace.
+            // Without trimming wierd style properties like ' border' (leading whitespace)
+            // may occur.
+            this.style[p[0].replace(/^\s+|(\s+(?!\S))/g,"")] = p[1].replace(/^\s+|(\s+(?!\S))/g,"");
+          }
+        }
+        alert(tmp);
+        */
+        return;
+      }
+      // If event handler set attribute as property. This will invoke
+      // UEM event handling if UEM is loaded
+      else if (/^on/.test(a)) {
+        // Create new anonymous function with v as body
+        this[a] = new Function(v);
+        return;
+      }
+      // accesskey *must* be accessKey
+      else if (/^accesskey/i.test(a))
+        a = 'accessKey';
+      else if (a == 'class')
+        a = 'className';
+      else if (a == 'for')
+        a = 'htmlFor';
+      // Default behavior is to use native method
+      this._setAttribute(a,v);
+    };
+
+  // Define PlugIn for all elements
+  EPE.PlugIn.SetAttribute = new EPE.PlugIn();
+  EPE.PlugIn.SetAttribute.addEPEListener('create',function(){this._setAttribute = this.setAttribute; this.setAttribute = EPE.setAttribute;});
+}
+// [epe.ie.htmlelement.setattributenode.js]
+
+// HTMLElement.setAttributeNode correction for IE
+if (document.createEventObject && window.EPE) {
+  // Define new EPE replacement function
+  EPE.setAttributeNode =
+    function(n) {
+      if (n.nodeName == 'style' || /^on/.test(n.nodeName))
+        this.setAttribute(n.nodeName, n.nodeValue);
+      else
+        this._setAttributeNode(n);
+    };
+  EPE.PlugIn.SetAttributeNode = new EPE.PlugIn();
+  EPE.PlugIn.SetAttributeNode.addEPEListener('create',function(){this._setAttributeNode = this.setAttributeNode; this.setAttributeNode = EPE.setAttributeNode;});
+}
+// [epe.ie.htmlselectelement.add.js]
+
+// W3C compliant implementation of HTMLSelectElement.add method for IE
+if (document.createEventObject && window.EPE) {
+  HTMLSelectElement.prototype.add =
+    function(newOption, beforeOption) {
+      if (beforeOption) {
+        var c = this.options;
+        var l = c.length;
+        var i=0;
+        // Find the option we are looking for
+        for(i=0; i<l; i++) {
+          if (c[i] == beforeOption)
+            break;
+        }
+        if (i < l) {
+          // When found move succeeding options 1 up
+          for(var j=l; j>i; j--)
+            c[j] = new Option(c[j-1].text,c[j-1].value,c[j-1].defaultSelected,c[j-1].selected);
+          c[i] = newOption;
+        }
+        else {
+          var ex = new Error("Element not found.");
+          ex.code = 8;
+          throw ex;
+        }
+      }
+      else
+        this.options[this.options.length] = newOption;
+    };
+}
+// [epe.ie.cssfloat.js]
+
+// Disable the default behavior when dragging an image.
+// Useful if you're using drag'n'drop.
+if (document.createEventObject) {
+  EPE.PlugIn.CssFloat = new EPE.PlugIn();
+  EPE.PlugIn.CssFloat.addEPEListener('attach',
+    function() {
+      if (this.style.cssFloat)
+        this.style.styleFloat = this.style.cssFloat;
+    }
+  );
+  
+  EPE.PlugIn.CssFloat.addEPEListener('change',
+    function(e) {
+      if (e.propertyName == 'style.cssFloat')
+        this.style.styleFloat = this.style.cssFloat;
+    }
+  );
+}// [epe.ie.cssopacity.js]
+
+// Map IE opacity to W3C opacity
+if (document.createEventObject) {
+  EPE.PlugIn.CssOpacity = new EPE.PlugIn();
+  EPE.PlugIn.CssOpacity.addEPEListener('attach',
+    function() {
+      if (this.style.opacity)
+        this.style.filter = 'progid:DXImageTransform.Microsoft.Alpha(opacity=' + (parseFloat(this.style.opacity) * 100) + ')';
+    }
+  );
+  
+  EPE.PlugIn.CssOpacity.addEPEListener('change',
+    function(e) {
+      if (e.propertyName == 'style.cssFloat')
+        this.style.filter = 'progid:DXImageTransform.Microsoft.Alpha(opacity=' + (parseFloat(this.style.opacity) * 100) + ')';
+    }
+  );
+}// [uem.ie.js]
 
 // Content
 //  1. User configurable settings
@@ -1506,14 +1757,14 @@ if (document.createEventObject) {
   // for increased performance.
   // Default value is 1. Set to 0 to turn off
   UEM.WATCH_PROPERTIES = 1;
-
+  
   // Execute event listeners for the target in the
   // capture phase. This behavior is also implemented
   // in Firefox, Opera and Safari although the W3C standard
   // says the opposite.
   // Default value is 1. Set to 0 to turn off
   UEM.CAPTURE_ON_TARGET = 1;
-
+  
   // THERE ARE NO CONFIGURABLE SETTINGS BELOW THIS LINE
 
   /***********************************************
@@ -1529,13 +1780,13 @@ if (document.createEventObject) {
    * supply values for it's this keyword.
    *
    * W3C Reference: http://www.w3.org/TR/DOM-Level-3-Events/events.html#Events-listeners
-   *
+   *  
    * Mozilla reference: http://developer.mozilla.org/en/docs/DOM:element.addEventListener
-   *
+   *  
    * @param type { String } Event type. One of DOMActivate, DOMFocusIn,
    *     DOMFocusOut, abort, blur, change, click, dblclick, error, focus,
    *     load, keydown, keypress, keyup, mousedown, mousemove, mouseover,
-   *     mouseup, reset, resize, scroll, select, submit, textinput, or
+   *     mouseup, reset, resize, scroll, select, submit, textinput, or  
    *     unload. Of these, dbclick is an extension to the set of W3C event
    *     types.
    * @param fnc { Function } The handler for the event.
@@ -1544,8 +1795,8 @@ if (document.createEventObject) {
    *     If false, the handler is available for invocation during the target
    *     and bubble phases.
    */
-  UEM.ADD_TO_WINDOW = false;
-  UEM.addEventListener =
+  UEM.ADD_TO_WINDOW = false; 
+  UEM.addEventListener = 
     function(type, fnc, useCapture) {
       // For unknown reasons 'this' is not equal to window if a function
       // which is defined on an object is called as a method on window
@@ -1625,13 +1876,13 @@ if (document.createEventObject) {
    * supply values for it's this keyword.
    *
    * W3C Reference: http://www.w3.org/TR/DOM-Level-3-Events/events.html#Events-listeners
-   *
+   *  
    * Mozilla reference: http://developer.mozilla.org/en/docs/DOM:element.removeEventListener
-   *
+   *  
    * @param type { String } Event type. One of DOMActivate, DOMFocusIn,
    *     DOMFocusOut, abort, blur, change, click, dblclick, error, focus,
    *     load, keydown, keypress, keyup, mousedown, mousemove, mouseover,
-   *     mouseup, reset, resize, scroll, select, submit, textinput, or
+   *     mouseup, reset, resize, scroll, select, submit, textinput, or  
    *     unload. Of these, dbclick is an extension to the set of W3C event
    *     types.
    * @param fnc { Function } The handler for the event to be removed.
@@ -1656,7 +1907,7 @@ if (document.createEventObject) {
           if (this[eType][i].fnc == fnc && this[eType][i].useCapture === useCapture) {
             // Reorder array - move j+1 to j
             for(var j=i; j<l-1; j++) {
-              this[eType][j] = this[eType][j+1];
+              this[eType][j] = this[eType][j+1]; 
             }
             this[eType].length--;
             // If array is empty then no event handlers of this type
@@ -1680,17 +1931,17 @@ if (document.createEventObject) {
    * supply values for it's this keyword.
    *
    * W3C reference: http://www.w3.org/TR/DOM-Level-3-Events/events.html#Events-DocumentEvent-createEvent
-   *
+   * 
    * Mozilla reference: http://developer.mozilla.org/en/docs/DOM:document.createEvent
-   *
+   * 
    * IE reference: http://msdn2.microsoft.com/en-us/library/ms536390.aspx
-   *
+   * 
    * Note:  The approach used now is using fireEvent to actually initiate an
    *        event in IE. It might be better/more feasible to leave out fireEvent
    *        and just create the type of event directly.
-   *
+   *        
    * @param type { String } 'Event', 'MouseEvent', or 'UIEvent'.
-   * @param e { IE Event object } An actual IE event object. Optional
+   * @param e { IE Event object } An actual IE event object. Optional   
    * @return an event object.
    */
     // Define createEvent
@@ -1710,19 +1961,19 @@ if (document.createEventObject) {
   /**
    * Dispatch an event into any element.  This method belongs to HTML elements which
    * supply values for it's this keyword.
-   *
+   * 
    * W3C reference: http://www.w3.org/TR/DOM-Level-3-Events/events.html#Events-EventTarget-dispatchEvent
-   *
+   * 
    * Mozilla reference: http://developer.mozilla.org/en/docs/DOM:element.dispatchEvent
-   *
+   * 
    * IE reference: http://msdn2.microsoft.com/en-us/library/ms536423.aspx
    *
    * @param e The event to dispatch.
    * @return true if the event was successfully dispatched and false if the
    * event was cancelled.
-   *
+   * 
    * Currently we avoid to use native IE event object and fireEvent method when dispatching.
-   * See also notes in UEM.wrapper.
+   * See also notes in UEM.wrapper.         
    */
   UEM.dispatchEvent =
     function(e) {
@@ -1730,7 +1981,7 @@ if (document.createEventObject) {
       e.target = this;
       UEM.wrapper.call(this, e);
     };
-
+    
   /***********************************************
    *
    *
@@ -1738,16 +1989,16 @@ if (document.createEventObject) {
    *
    *
    ***********************************************/
-
+  
   /**
    * Used for removing all event handlers when assigning a single handler as a property
    * NOTE: Currently only called by UEM.watch when watching is DISABLED. Hence no need
    *       to disable watching in this function.
-   *
+   *       
    * @param type { String } Event type. One of DOMActivate, DOMFocusIn,
    *     DOMFocusOut, abort, blur, change, click, dblclick, error, focus,
    *     load, keydown, keypress, keyup, mousedown, mousemove, mouseover,
-   *     mouseup, reset, resize, scroll, select, submit, textinput, or
+   *     mouseup, reset, resize, scroll, select, submit, textinput, or  
    *     unload. Of these, dbclick is an extension to the set of W3C event
    *     types.
    */
@@ -1762,7 +2013,7 @@ if (document.createEventObject) {
         this['on'+type] = null;
       }
       // Else remove all event handlers
-      // ** NOT WORKING YET - BUT NOT USED YET ** //
+      // ** NOT WORKING YET - BUT NOT USED YET ** // 
       else {
         /*
       var tmp = "";
@@ -1776,14 +2027,14 @@ if (document.createEventObject) {
          */
       }
     };
-
+  
   /**
    * Return an array with names of events that EPE supports.  This is a subset
    * of the events that can actually be thrown natively, especially when the
    * browser is Internet Explorer.  The names returned are the native names,
    * not the W3C names.  The names returned are not prefixed with 'on'.  For
    * instance, 'activate' might be a member;  not 'DOMActivate' or 'onactivate'.
-   *
+   * 
    * @param tag {String} An HTML tag name.
    * @return an array with names of allowed events.
    */
@@ -1791,7 +2042,7 @@ if (document.createEventObject) {
     function(tag) {
       return UEM.elementEventTypes.allTags.concat(UEM.elementEventTypes[tag]);
     };
-
+  
   // Lookup table for possible event types
   // W3C References: http://www.w3.org/2007/07/xhtml-basic-ref.html
   // http://www.w3.org/TR/1999/REC-html401-19991224/sgml/dtd.html
@@ -1807,7 +2058,7 @@ if (document.createEventObject) {
       select: ['blur','change','focus'],
       textarea: ['blur','change','focus','select']
     };
-
+  
   /**
    * If the specified tag is one that can have an event listener, return
    * true.  Otherwise false.  Most tags can have event listeners.  An
@@ -1826,13 +2077,13 @@ if (document.createEventObject) {
       }
       return true;
     };
-
+  
   // List of tags which can not have event listeners
   UEM.noEvents = ['br','style','script','head','meta','link','title'];
-
+  
   /**
    * Translate name of event type from W3C to IE.
-   *
+   * 
    * @param type {String} A W3C event name.
    * @return the native event name.
    */
@@ -1840,7 +2091,7 @@ if (document.createEventObject) {
     function(type) {
       return UEM.eventTypes[type] ? UEM.eventTypes[type] : type;
     };
-
+  
   // Event type translation table
   // Translate name of event type from W3C to IE
   UEM.eventTypes =
@@ -1851,7 +2102,7 @@ if (document.createEventObject) {
       // Don't know wheter this is W3C but Firefox is using DOMMouseScroll
       DOMMouseScroll: 'mousewheel'
     };
-
+  
   /**
    * Convert functions defined as inline event handlers
    * to proper event listeners.
@@ -1870,7 +2121,7 @@ if (document.createEventObject) {
       // Wrap body in anonymous function with event as an extra argument
       return new Function('event',b);
     };
-
+  
   /***********************************************
    *
    *
@@ -1887,10 +2138,10 @@ if (document.createEventObject) {
    * for this call to addEventListener.  During propagation, the 'this'
    * keyword refers to the same element as the currentTarget property of the
    * event object.
-   *
+   * 
    * EXPERIMENTAL: If argument e is supplied UEM.wrapper was called from UEM.dispatch.
    *               This is a cleaner way of dispatching as IE behaves weird with UEM +
-   *               natie fireEvent method,
+   *               natie fireEvent method,            
    */
   UEM.wrapper =
     function(e) {
@@ -1992,7 +2243,7 @@ if (document.createEventObject) {
       }
       return true;
     };
-
+  
   /***********************************************
    *
    *
@@ -2000,27 +2251,27 @@ if (document.createEventObject) {
    *
    *
    ***********************************************/
-
+  
   // Define Event interface for window
   window.addEventListener = UEM.addEventListener;
   window.removeEventListener = UEM.removeEventListener;
   window.dispatchEvent = UEM.dispatchEvent;
   window.removeAllEventListeners = UEM.removeAllEventListeners;
 
-
+  
   // Define Event interface for document
   document.addEventListener = UEM.addEventListener;
   document.removeEventListener = UEM.removeEventListener;
   document.dispatchEvent = UEM.dispatchEvent;
   document.removeAllEventListeners = UEM.removeAllEventListeners;
-
-
+  
+  
   // Define Event interface for elements
   HTMLElement.prototype.addEventListener = UEM.addEventListener;
   HTMLElement.prototype.removeEventListener = UEM.removeEventListener;
   HTMLElement.prototype.dispatchEvent = UEM.dispatchEvent;
   HTMLElement.prototype.removeAllEventListeners = UEM.removeAllEventListeners;
-
+  
   /**
    * Check for all possible native event handlers and convert to proper event
    * handlers.  This is a listener that is registered as a creation handler
@@ -2039,7 +2290,7 @@ if (document.createEventObject) {
       // and the types specific to the element
       var eTypes = UEM.getPossibleEventTypes(tag);
       var tmp = '';
-      // For each possible event handler in tag
+      // For each possible event handler in tag 
       for(var p in eTypes) {
         tmp = 'on'+eTypes[p];
         // If handler is defined for node
@@ -2051,7 +2302,7 @@ if (document.createEventObject) {
         }
       }
     };
-
+  
   /**
    * A property change listener.  It's purpose is to add an event listener
    * if required by some property change event.  The property
@@ -2061,7 +2312,7 @@ if (document.createEventObject) {
    *
    * The 'this' keyword refers to the element being created and is
    * supplied by EPE when the callback to onElementCreate is made.
-   *
+   * 
    * @param e An Internet Explorer event object.
    */
   UEM.onElementChange =
@@ -2070,7 +2321,7 @@ if (document.createEventObject) {
       if (p.match(/^on/))
         this.addEventListener(p, this[p], false);
     };
-
+  
   // Create EPE PlugIn
   EPE.PlugIn.UEM = new EPE.PlugIn();
   // Register element create listener function with EPE
@@ -2080,7 +2331,7 @@ if (document.createEventObject) {
   // functions
   if (UEM.WATCH_PROPERTIES)
     EPE.PlugIn.UEM.addEPEListener('change',UEM.onElementChange);
-
+  
   /***********************************************
    *
    *
@@ -2153,19 +2404,19 @@ if (document.createEventObject) {
           if (ie_event.keyCode == 17)
             keyLocation = ie_event.ctrlLeft ? KeyboardEvent.DOM_KEY_LOCATION_LEFT : KeyboardEvent.DOM_KEY_LOCATION_RIGHT;
           // keyIdentifier == 'Shift'
-          else if (ie_event.keyCode == 16)
+          else if (ie_event.keyCode == 16) 
             keyLocation = ie_event.shiftLeft ? KeyboardEvent.DOM_KEY_LOCATION_LEFT : KeyboardEvent.DOM_KEY_LOCATION_RIGHT;
           // keyIdentifier == 'Alt'
           else if (ie_event.keyCode == 18)
             keyLocation = ie_event.altLeft ? KeyboardEvent.DOM_KEY_LOCATION_LEFT : KeyboardEvent.DOM_KEY_LOCATION_RIGHT;
           // Left Win
-          else if (ie_event.keyCode == 91)
+          else if (ie_event.keyCode == 91) 
             keyLocation = KeyboardEvent.DOM_KEY_LOCATION_LEFT;
           // Right Win
-          else if (ie_event.keyCode == 92)
+          else if (ie_event.keyCode == 92) 
             keyLocation = KeyboardEvent.DOM_KEY_LOCATION_RIGHT;
           // Number pad
-          else if (96 <= ie_event.keyCode && ie_event.keyCode <= 105)
+          else if (96 <= ie_event.keyCode && ie_event.keyCode <= 105) 
             keyLocation = KeyboardEvent.DOM_KEY_LOCATION_NUMPAD;
           if (ie_event.ctrlKey)
             modifiersList += " Control";
@@ -2189,7 +2440,7 @@ if (document.createEventObject) {
           e.initMutationEvent(ie_event.type, bubbles, cancelable, relatedNode, prevValue, newValue, attrName, attrChange);
            */
           break;
-        default:
+        default:  
           break;
       }
       return e;
@@ -2197,7 +2448,7 @@ if (document.createEventObject) {
 
   /**
    * Look up whether an event of a given type is cancelable.
-   *
+   * 
    * @param type {String} Event type.
    * @return true if the event is cancelable as defined by the W3C DOM event
    * specification.
@@ -2211,10 +2462,10 @@ if (document.createEventObject) {
         throw new Error('UEM: Unsupported event type: ' + type);
       }
     };
-
+  
   /**
    * Look up whether an event of a given type bubbles.
-   *
+   * 
    * @param type {String} Event type.
    * @return true if the event can be capture or bubble propagated.  If
    * event propagation is surpressed, return false.
@@ -2228,7 +2479,7 @@ if (document.createEventObject) {
         throw new Error('UEM: Unsupported event type: ' + type);
       }
     };
-
+  
   /**
    * Get a W3C mouse button value for simple mouse events.  If two mouse
    * buttons are pressed simultaneously then
@@ -2245,7 +2496,7 @@ if (document.createEventObject) {
    * <tr><td>7</td><td>7</td><td>All three buttons are pressed.  Usage is not portable.</td></tr>
    * </tbody>
    * </table>
-   *
+   * 
    * @param i The native code for the mouse button that was pressed.
    * @return value depends on how the mouse is configured.  For a right-handed
    * mouse, return 0, 1, or 2 for a left, middle, or right mouse click.  For
@@ -2265,7 +2516,7 @@ if (document.createEventObject) {
           return i;
       }
     };
-
+  
   // W3C -> IE
   UEM.getIEButton =
     function(i) {
@@ -2278,7 +2529,7 @@ if (document.createEventObject) {
         return i;
     }
   };
-
+  
   /**
    * Find the event class, given only an event name.
    * @param type
@@ -2294,7 +2545,7 @@ if (document.createEventObject) {
         throw new Error('UEM: Unsupported event type: ' + type);
       }
     };
-
+  
   // Event property lookup table
   // Reference is summary table in
   // http://www.w3.org/TR/2003/NOTE-DOM-Level-3-Events-20031107/events.html#Events-EventTypes-complete
@@ -2486,9 +2737,9 @@ if (document.createEventObject) {
 
   /**
    * Construct an Event object.
-   * W3C Reference: http://www.w3.org/TR/2003/NOTE-DOM-Level-3-Events-20031107/events.html#Events-Event
+   * W3C Reference: http://www.w3.org/TR/2003/NOTE-DOM-Level-3-Events-20031107/events.html#Events-Event  
    *
-   * @param e { IE Event object } An actual IE event object. Optional
+   * @param e { IE Event object } An actual IE event object. Optional 
    * @returns A new Event object
    * @type Event
    */
@@ -2511,10 +2762,10 @@ if (document.createEventObject) {
   // Methods
   /**
    * Initialize an event object.  Keyword 'this' is an event object.
-   *
+   * 
    * @param type {String} Event type.
    * @param canBubble Boolean that determines if the event propagates.
-   * @param cancelable Boolean that determines if the event can be cancelled.
+   * @param cancelable Boolean that determines if the event can be cancelled. 
    */
   Event.prototype.initEvent =
     function(type,canBubble,cancelable) {
@@ -2565,10 +2816,10 @@ if (document.createEventObject) {
   /**
    * Utility method for setting basic properties of event object
    * Mainly used from subclasses of the Event class
-   * @param e { IE Event object } An actual IE event object.
+   * @param e { IE Event object } An actual IE event object. 
    * @returns Undefined
    * @type Event
-   */
+   */   
   Event.prototype.initUEMEvent =
     function(ie_event) {
       // Save ref. to window event - we need this to set returnValue.
@@ -2583,7 +2834,7 @@ if (document.createEventObject) {
   /**
    * Execute functions in propagation chain.  The 'this' keyword for
    * 'propagate' is a reference to the event object.
-   *
+   * 
    * @param chain An array of event handlers.  The handlers must be listed
    *    in the correct propagation order.
    * @param useCapture {Boolean} True to invoke capture phase event handlers
@@ -2653,7 +2904,7 @@ if (document.createEventObject) {
   // Methods
   /**
    * Initialize an event object.  Keyword 'this' is an event object.
-   *
+   * 
    * @param type {String} Event type.
    * @param canBubble Boolean that determines if the event propagates.
    * @param cancelable Boolean that determines if the event can be cancelled.
@@ -2695,7 +2946,7 @@ if (document.createEventObject) {
   // Methods
   /**
    * Initialize an event object.  Keyword 'this' is an event object.
-   *
+   * 
    * @param type {String} Event type.
    * @param canBubble Boolean that determines if the event propagates.
    * @param cancelable Boolean that determines if the event can be cancelled.
@@ -2724,7 +2975,7 @@ if (document.createEventObject) {
   MouseEvent.prototype.initMouseEvent =
     function(type,canBubble,cancelable,view,detail,screenX,screenY,clientX,clientY,ctrlKey,altKey,shiftKey,metaKey,button,relatedTarget) {
     this.initUIEvent(type,canBubble,cancelable,view,detail);
-    this.screenX = screenX;
+    this.screenX = screenX; 
     this.screenY = screenY;
     this.clientX = clientX;
     this.clientY = clientY;
@@ -2735,7 +2986,7 @@ if (document.createEventObject) {
     this.button = button;
     this.relatedTarget = relatedTarget;
   };
-
+  
   //DOM 3 Methods
   MouseEvent.prototype.getModifierState =
     function(keyIdentifier) {
@@ -2776,7 +3027,7 @@ if (document.createEventObject) {
   // Methods
   /**
    * Initialize an event object.  Keyword 'this' is an event object.
-   *
+   * 
    * @param type {String} Event type.
    * @param canBubble Boolean that determines if the event propagates.
    * @param cancelable Boolean that determines if the event can be cancelled.
@@ -2817,14 +3068,14 @@ if (document.createEventObject) {
   TextEvent.prototype = new UIEvent();
   // Reset constructor
   TextEvent.prototype.constructor = TextEvent;
-
+ 
   // Methods
   /**
    * Initialize an event object.  Keyword 'this' is an event object.
-   *
+   * 
    * @param type {String} Event type.
    * @param canBubble Boolean that determines if the event propagates.
-   * @param cancelable Boolean that determines if the event can be cancelled.
+   * @param cancelable Boolean that determines if the event can be cancelled. 
    */
   TextEvent.prototype.initTextEvent =
     function(type,canBubble,cancelable,view,data) {

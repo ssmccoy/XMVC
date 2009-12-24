@@ -86,8 +86,37 @@ function JITLoader (semaphore) {
     }
 }
 
+function DocumentWriteScriptLoader (semaphore) {
+    this.onload = function () {}
+    this.onerror = function (error) {}
+
+    this.load = function (script) {
+        if (this.isRequired(script)) {
+            semaphore.acquire()
+
+            var script = document.createElement("script")
+
+            script.setAttribute("type", "text/javascript")
+            script.setAttribute("src", script)
+
+            var loader = this
+
+            script.onreadystatechange = function () {
+                if (this.readyState == "complete") {
+                    loader.onload()
+                }
+            }
+
+            this.onload()
+
+            semaphore.release()
+        }
+    }
+}
+
 
 var singlePassEvaluator = new SinglePassEvaluator()
 
-HttpJavaScriptLoader.prototype = singlePassEvaluator
-JITLoader.prototype            = singlePassEvaluator
+HttpJavaScriptLoader.prototype      = singlePassEvaluator
+JITLoader.prototype                 = singlePassEvaluator
+DocumentWriteScriptLoader.prototype = singlePassEvaluator

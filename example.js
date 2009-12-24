@@ -13,7 +13,7 @@ function Bar (message) {
     this.message = message
 
     this.feature = function () {
-        window.alert("And you can also: \f".format(this.test.member))
+        window.alert("And you can also: \f".format("click"))
     }
 }
 
@@ -22,6 +22,8 @@ function Foo (bar) {
         window.alert(bar.message)
 
         bar.feature()
+
+        return false
     }
 }
 
@@ -52,5 +54,7 @@ function Greeter () {
         var dialog = ctx.element.parentNode
 
         dialog.parentNode.removeChild(dialog)
+
+        return false
     }
 }

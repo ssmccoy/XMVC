@@ -21,17 +21,24 @@
 var globalDocument = document
 
 function Controller (document) {
-    if (typeof document == "undefined") document = globalDocument
+    window.alert("I think this is what's all messed up...")
+    if (typeof document == "undefined") {
+        document = globalDocument
+        window.alert("YO!")
+    }
 
     window.alert(document)
 
-    var documentScope = new DocumentScope(document)
     var selections    = []
     var mustWalk      = false
     var walkObservers = []
 
-    /* Register the scope with the global context as type "document" */
+    /* TODO: Debug document scope...
+     *
+     * Register the scope with the global context as type "document" 
+    var documentScope = new DocumentScope(document)
     context.addScope("document", documentScope)
+    */
 
     /**
      * Adds a tree-walk observer. 
@@ -97,7 +104,9 @@ function Controller (document) {
     }
 
     this.createAction = function (objectName, methodName, observer) {
-        return new Action(documentScope, objectName, methodName, observer)
+        /* TODO reintroduce node selection to document scope... */
+        return new Action(null, objectName, methodName, observer)
+        //return new Action(documentScope, objectName, methodName, observer)
     }
 
     this.process(document)
@@ -241,7 +250,7 @@ function Action (scope, objectName, methodName, observer) {
      * target element for the given event.
      */
     this.handle = function (event, e) {
-        scope.select(this)
+        //scope.select(this)
 
         var object = context.load(objectName)
 
@@ -394,6 +403,7 @@ function TransformObserver (transformers, locator, mutator) {
 
     this.notify = function (input) {
         var modification = this.transform(input)
+        /* XXX Shouldn't locate() be taking a context here? */
         var element      = locator.locate()
 
         if (element == null) {

@@ -8,6 +8,9 @@ var JOICENS_XML      = "xml"
 var JOICENS_PROPERTY = "property"
 var JOICENS_ARGUMENT = "argument"
 
+/* NOTE 20091222T12:52:57 Always use tagName, not localName.  Even though
+ * tagName is funky and inappropriate, localName doesn't work *at all* in IE.
+ */
 
 /**
  * @constructor Create a new configuration filter.
@@ -73,7 +76,7 @@ function XMLConfigurationFilter (configurator) {
      * located.
      */
     this.filter = function (element) {
-        if (element.hasChildNodes) {
+        if (element.hasChildNodes()) {
             var children = element.childNodes
 
             for (var i = 0; i < children.length; i++) {
@@ -81,13 +84,23 @@ function XMLConfigurationFilter (configurator) {
             }
         }
 
-        if (element.hasAttributes()) {
-            var attributes = element.attributes
+        /* There are lots of IE workarounds here... */
+        var attributes = element.attributes
 
+        if (attributes != null) {
             for (var i = 0; i < attributes.length; i++) {
                 var attribute = attributes[i]
 
-                attribute.value = this.configure(attribute.value)
+                if (typeof attribute != "undefined" &&
+                        typeof attribute.value != "undefined") {
+                    var value = this.configure(attribute.value)
+
+                    /* At risk of trying to write a read-only attribute, only
+                     * modify attributes which had actual modifications... */
+                    if (value != attribute.value) {
+                        attribute.value = value
+                    }
+                }
             }
         }
     }
@@ -125,8 +138,14 @@ ContextConfigurationError.prototype = new Error()
 function XMLContextConfiguration (context, semaphore) {
     var specs       = {}
     var loaders     = {
-        "text/javascript": new HttpJavaScriptLoader(semaphore),
+        "text/javascript": new DocumentWriteScriptLoader(semaphore),
         "text/javascript;debug": new JITLoader(semaphore)
+    }
+
+    function hasAttribute (node, attribute) {
+        return node.attributes &&
+        node.attributes[attribute] != null &&
+        typeof node.attributes[attribute] != "undefined";
     }
 
     /**
@@ -197,7 +216,7 @@ function XMLContextConfiguration (context, semaphore) {
             if (child.namespaceURI == JOICENS) {
                 var argument = doc.createElementNS(JOICENS, JOICENS_ARGUMENT)
 
-                if (child.hasAttribute("object")) {
+                if (hasAttribute(child, "object")) {
                     argument.setAttribute("object",
                             child.getAttribute("object"))
                 }
@@ -215,11 +234,11 @@ function XMLContextConfiguration (context, semaphore) {
     }
 
     function Context_parseProperty (element) {
-        if (element.hasAttribute("value")) {
+        if (hasAttribute(element, "value")) {
             return new PropertySpecification("value",
                 element.getAttribute("value"))
         }
-        else if (element.hasAttribute("object")) {
+        else if (hasAttribute(element, "object")) {
             return new PropertySpecification("object",
                 vivifyObject(element.getAttribute("object")))
         }
@@ -231,7 +250,7 @@ function XMLContextConfiguration (context, semaphore) {
             for (var i = 0; i < children.length; i++) {
                 var child = children[i]
 
-                if (child.namespaceURI == JOICENS) switch (child.localName) {
+                if (child.namespaceURI == JOICENS) switch (child.tagName) {
                     case JOICENS_OBJECT:
                         /* {} is just new Object(), I'm assuming that's true on
                          * all implementations it very well should be.  This
@@ -297,7 +316,7 @@ function XMLContextConfiguration (context, semaphore) {
         for (var i = 0; i < children.length; i++) {
             var property = children[i]
 
-            if (property.localName == JOICENS_PROPERTY) {
+            if (property.tagName == JOICENS_PROPERTY) {
                 var name = property.getAttribute("name")
 
                 if (name == null) {
@@ -307,7 +326,7 @@ function XMLContextConfiguration (context, semaphore) {
 
                 spec.setProperty(name, Context_parseProperty(property))
             }
-            else if (property.localName == JOICENS_ARGUMENT) {
+            else if (property.tagName == JOICENS_ARGUMENT) {
                 spec.addArgument(Context_parseProperty(property))
             }
             else {
@@ -357,20 +376,30 @@ function XMLContextConfiguration (context, semaphore) {
      */
     this.parseConfig = function (config) {
         var possibleObjects = config.childNodes
+        var elements = []
 
         for (var i = 0; i < possibleObjects.length; i++) {
             var possibleObject = possibleObjects[i]
 
             if (possibleObject.namespaceURI == JOICENS &&
-                    possibleObject.localName == JOICENS_SCRIPT) {
+                    possibleObject.tagName == JOICENS_SCRIPT) {
                 Context_parseScript(possibleObject)
             }
 
             if (possibleObject.namespaceURI == JOICENS &&
-                    possibleObject.localName == JOICENS_OBJECT) {
+                    possibleObject.tagName == JOICENS_OBJECT) {
                 Context_parseObject(possibleObject)
             }
+
+            elements.push("Not possible object {" +
+                    possibleObject.namespaceURI
+                    +"}"+
+                    possibleObject.localName
+                    + " IE sucks " +
+                    possibleObject.tagName)
         }
+
+        window.alert(elements.join("\n"))
 
         for (var key in specs) {
             var ctor = specs[key].ctor

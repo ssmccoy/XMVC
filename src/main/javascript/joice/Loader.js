@@ -43,6 +43,7 @@ function JoiceLoader (global) {
 
                     case 200:
                     case 0:
+                        window.alert("Fetched configuration")
                         callback(request.responseXML, request.responseText)
                 }
             }
@@ -87,7 +88,7 @@ function JoiceLoader (global) {
 
         for (var i = 0; i < children.length; i++) {
             var node = children[i]
-            if (node.localName == "script") {
+            if (node.tagName == "script") {
                 /* We have a raw script.  Strip it out from it's parent so it
                  * doesn't get parsed twice, and force the configurator to load
                  * it now rather than later.

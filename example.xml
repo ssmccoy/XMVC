@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <context xmlns="http://www.blisted.org/ns/joice/">
-  <script type="text/javascript;debug" src="src/main/javascript/xmvc/Transformer.js"/>
-  <script type="text/javascript;debug" src="src/main/javascript/xmvc/Configuration.js"/>
-  <script type="text/javascript;debug" src="src/main/javascript/xmvc/ControllerScope.js"/>
+  <!-- text/javascript;debug runs the IE-incompatible jit loader which keeps
+  track of the actual source location... -->
+  <script type="text/javascript" src="src/main/javascript/xmvc/ControllerScope.js"/>
+  <script type="text/javascript" src="src/main/javascript/xmvc/Transformer.js"/>
+  <script type="text/javascript" src="src/main/javascript/xmvc/Configuration.js"/>
 
   <script type="text/javascript;debug" src="example.js"/>
 
@@ -17,6 +19,7 @@
       </array>
     </argument>
   </object>
+
   <object id="bar" constructor="Bar">
     <property name="message" value="${message}"/>
     <property name="test">

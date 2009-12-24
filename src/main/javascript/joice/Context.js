@@ -190,10 +190,12 @@ function Context () {
     var specifications = []
     var labels         = {}
     var factories      = []
+
     /* Default scopes */
     var scopes         = {
-        "singleton": new SingletonScope(),
-        "prototype": new PrototypeScope()
+ // TODO: IE is not finding these constructors for whatever reason.. */
+ //     "singleton": new SingletonScope(),
+ //     "prototype": new PrototypeScope()
     }
 
     this.addSpecification = function (specification) {
@@ -240,7 +242,15 @@ function Context () {
         if (typeof specification != "undefined") {
             var scope = scopes[ specification.scope ]
 
-            return scope.get(id, factories[id])
+            if (typeof scope != "undefined") {
+                return scope.get(id, factories[id])
+            }
+            /* XXX Default to a prototype-like state if there is no appropriate
+             * scope... (realistically, this should error coherently instead)
+             */
+            else {
+                return factories[id].createObject()
+            }
         }
         else {
             return null
@@ -290,6 +300,8 @@ function Context () {
         if (!initialized) {
             var specificationCount = specifications.length
 
+            window.alert("Specifications: " + specificationCount)
+
             for (var i = 0; i < specificationCount; i++) {
                 var specification = specifications[i]
 
@@ -299,6 +311,7 @@ function Context () {
                  * consider this undefined behavior and really don't care if
                  * someone finds a reason to try that. */
                 if (specification.init == "eager") {
+                    window.alert("Initting: " + specification.id)
                     this.getObject(specification.id)
                 }
             }
